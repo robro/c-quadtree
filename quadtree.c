@@ -35,6 +35,13 @@ bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point) {
 	return true;
 }
 
+struct Vec2 aabb_get_center(struct AABB *boundary) {
+	return (struct Vec2){
+		.x = boundary->min.x + (boundary->max.x - boundary->min.x) / 2,
+		.y = boundary->min.y + (boundary->max.y - boundary->min.y) / 2,
+	};
+}
+
 void quadtree_init(struct QuadTree *qtree, struct AABB *boundary) {
 	qtree->boundary = *boundary;
 	qtree->point_count = 0;
@@ -67,23 +74,22 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 		qtree->south_west = &children[2];
 		qtree->south_east = &children[3];
 
-		float midpoint_x = qtree->boundary.min.x + (qtree->boundary.max.x - qtree->boundary.min.x) / 2;
-		float midpoint_y = qtree->boundary.min.y + (qtree->boundary.max.y - qtree->boundary.min.y) / 2;
+		struct Vec2 boundary_center = aabb_get_center(&qtree->boundary);
 
 		quadtree_init(qtree->north_west, &(struct AABB){
 			.min = qtree->boundary.min,
-			.max = {.x = midpoint_x, .y = midpoint_y}
+			.max = boundary_center,
 		});
 		quadtree_init(qtree->north_east, &(struct AABB){
-			.min = {.x = midpoint_x, .y = qtree->boundary.min.y},
-			.max = {.x = qtree->boundary.max.x, .y = midpoint_y}
+			.min = {.x = boundary_center.x, .y = qtree->boundary.min.y},
+			.max = {.x = qtree->boundary.max.x, .y = boundary_center.y}
 		});
 		quadtree_init(qtree->south_west, &(struct AABB){
-			.min = {.x = qtree->boundary.min.x, .y = midpoint_x},
-			.max = {.x = midpoint_x, .y = qtree->boundary.max.y}
+			.min = {.x = qtree->boundary.min.x, .y = boundary_center.x},
+			.max = {.x = boundary_center.x, .y = qtree->boundary.max.y}
 		});
 		quadtree_init(qtree->south_east, &(struct AABB){
-			.min = {.x = midpoint_x, .y = midpoint_x},
+			.min = boundary_center,
 			.max = qtree->boundary.max,
 		});
 
