@@ -46,6 +46,7 @@ struct Vec2 aabb_get_center(struct AABB *boundary) {
 void quadtree_init(struct QuadTree *qtree, struct AABB *boundary) {
 	qtree->boundary = *boundary;
 	qtree->point_count = 0;
+	qtree->north_west = NULL;
 }
 
 void quadtree_free_children(struct QuadTree *qtree) {
