@@ -47,10 +47,8 @@ struct QuadTree *quadtree_new(struct AABB aabb) {
 }
 
 bool quadtree_contains_point(struct QuadTree *qtree, struct Vec2 *point) {
-	if (point->x < qtree->aabb.min.x || point->x >= qtree->aabb.max.x) {
-		return false;
-	}
-	if (point->y < qtree->aabb.min.y || point->y >= qtree->aabb.max.y) {
+	if (point->x < qtree->aabb.min.x || point->x >= qtree->aabb.max.x ||
+		point->y < qtree->aabb.min.y || point->y >= qtree->aabb.max.y) {
 		return false;
 	}
 	return true;
