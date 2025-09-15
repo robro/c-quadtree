@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#define MAX_POINTS 4
+#define POINTS_PER_NODE 4
 
 uint qtree_count = 0;
 
@@ -17,108 +17,89 @@ struct AABB {
 };
 
 struct QuadTree {
-	uint max_points;
 	uint point_count;
-	struct Vec2 **points;
-	struct AABB aabb;
+	struct AABB boundary;
+	struct Vec2 *points[POINTS_PER_NODE];
 
-	struct QuadTree *top_left;
-	struct QuadTree *top_right;
-	struct QuadTree *bottom_left;
-	struct QuadTree *bottom_right;
+	struct QuadTree *north_west;
+	struct QuadTree *north_east;
+	struct QuadTree *south_west;
+	struct QuadTree *south_east;
 };
 
-struct QuadTree *quadtree_new(struct AABB aabb) {
-	struct QuadTree *qt = malloc(sizeof(*qt));
-	if (qt == NULL) {
-		return NULL;
-	}
-	struct Vec2 **points = malloc(sizeof(*points) * MAX_POINTS);
-	if (points == NULL) {
-		free(qt);
-		return NULL;
-	}
-	qt->max_points = MAX_POINTS;
-	qt->point_count = 0;
-	qt->points = points;
-	qt->aabb = aabb;
-	qtree_count++;
-	return qt;
-}
-
-bool quadtree_contains_point(struct QuadTree *qtree, struct Vec2 *point) {
-	if (point->x < qtree->aabb.min.x || point->x >= qtree->aabb.max.x ||
-		point->y < qtree->aabb.min.y || point->y >= qtree->aabb.max.y) {
+bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point) {
+	if (point->x < boundary->min.x || point->x >= boundary->max.x ||
+		point->y < boundary->min.y || point->y >= boundary->max.y) {
 		return false;
 	}
 	return true;
 }
 
+void quadtree_init(struct QuadTree *qtree, struct AABB *boundary) {
+	qtree->boundary = *boundary;
+	qtree->point_count = 0;
+}
+
 void quadtree_free(struct QuadTree *qtree) {
-	if (qtree == NULL) {
-		return;
-	}
-	if (qtree->top_left) quadtree_free(qtree->top_left);
-	if (qtree->top_right) quadtree_free(qtree->top_right);
-	if (qtree->bottom_left) quadtree_free(qtree->bottom_left);
-	if (qtree->bottom_right) quadtree_free(qtree->bottom_right);
-	free(qtree->points);
+	// the first child's pointer is the same pointer returned by malloc
+	// for all the children's memory, so we only need to free that
+	if (qtree->north_west) quadtree_free(qtree->north_west);
 	free(qtree);
 }
 
 bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
-	if (!quadtree_contains_point(qtree, point)) {
+	if (!aabb_contains_point(&qtree->boundary, point)) {
 		return false;
 	}
-	if (qtree->point_count == qtree->max_points) {
-		// if subquads don't exist, create them first
-		if (qtree->top_left == NULL) {
-			// assume if any subquad is NULL they all are
-			float midpoint_x = qtree->aabb.min.x + (qtree->aabb.max.x - qtree->aabb.min.x) / 2;
-			float midpoint_y = qtree->aabb.min.y + (qtree->aabb.max.y - qtree->aabb.min.y) / 2;
-
-			qtree->top_left = quadtree_new((struct AABB){
-				.min = qtree->aabb.min,
-				.max = {.x = midpoint_x, .y = midpoint_y}
-			});
-			if (qtree->top_left == NULL) {
-				goto free_subquads;
-			}
-			qtree->top_right = quadtree_new((struct AABB){
-				.min = {.x = midpoint_x, .y = qtree->aabb.min.y},
-				.max = {.x = qtree->aabb.max.x, .y = midpoint_y}
-			});
-			if (qtree->top_right == NULL) {
-				goto free_subquads;
-			}
-			qtree->bottom_left = quadtree_new((struct AABB){
-				.min = {.x = qtree->aabb.min.x, .y = midpoint_x},
-				.max = {.x = midpoint_x, .y = qtree->aabb.max.y}
-			});
-			if (qtree->bottom_left == NULL) {
-				goto free_subquads;
-			}
-			qtree->bottom_right = quadtree_new((struct AABB){
-				.min = {.x = midpoint_x, .y = midpoint_x},
-				.max = qtree->aabb.max,
-			});
-			if (qtree->bottom_right == NULL) {
-				goto free_subquads;
-			}
+	if (qtree->point_count < POINTS_PER_NODE && qtree->north_west == NULL) {
+		// we have room for more points and no children yet (assume if any children are NULL they all are)
+		// so just add the point here
+		qtree->points[qtree->point_count++] = point;
+		return true;
+	}
+	if (qtree->north_west == NULL) {
+		// we don't have room for more points and need to subdivide
+		struct QuadTree *children = malloc(sizeof(*children) * 4);
+		if (children == NULL) {
+			return false;
 		}
-		if (quadtree_add_point(qtree->top_left, point)) return true;
-		if (quadtree_add_point(qtree->top_right, point)) return true;
-		if (quadtree_add_point(qtree->bottom_left, point)) return true;
-		if (quadtree_add_point(qtree->bottom_right, point)) return true;
-		return false; // this should be unreachable
+		qtree->north_west = &children[0];
+		qtree->north_east = &children[1];
+		qtree->south_west = &children[2];
+		qtree->south_east = &children[3];
 
-	free_subquads:
-		quadtree_free(qtree->top_left);
-		quadtree_free(qtree->top_right);
-		quadtree_free(qtree->bottom_left);
-		quadtree_free(qtree->bottom_right);
-		return false;
+		float midpoint_x = qtree->boundary.min.x + (qtree->boundary.max.x - qtree->boundary.min.x) / 2;
+		float midpoint_y = qtree->boundary.min.y + (qtree->boundary.max.y - qtree->boundary.min.y) / 2;
+
+		quadtree_init(qtree->north_west, &(struct AABB){
+			.min = qtree->boundary.min,
+			.max = {.x = midpoint_x, .y = midpoint_y}
+		});
+		quadtree_init(qtree->north_east, &(struct AABB){
+			.min = {.x = midpoint_x, .y = qtree->boundary.min.y},
+			.max = {.x = qtree->boundary.max.x, .y = midpoint_y}
+		});
+		quadtree_init(qtree->south_west, &(struct AABB){
+			.min = {.x = qtree->boundary.min.x, .y = midpoint_x},
+			.max = {.x = midpoint_x, .y = qtree->boundary.max.y}
+		});
+		quadtree_init(qtree->south_east, &(struct AABB){
+			.min = {.x = midpoint_x, .y = midpoint_x},
+			.max = qtree->boundary.max,
+		});
+
+		// add existing points to children
+		for (int i = 0; i < qtree->point_count; ++i) {
+			if (quadtree_add_point(qtree->north_west, qtree->points[i])) continue;
+			if (quadtree_add_point(qtree->north_east, qtree->points[i])) continue;
+			if (quadtree_add_point(qtree->south_west, qtree->points[i])) continue;
+			if (quadtree_add_point(qtree->south_east, qtree->points[i])) continue;
+		}
 	}
-	qtree->points[qtree->point_count++] = point;
-	return true;
+	// add point to whichever child will accept it
+	if (quadtree_add_point(qtree->north_west, point)) return true;
+	if (quadtree_add_point(qtree->north_east, point)) return true;
+	if (quadtree_add_point(qtree->south_west, point)) return true;
+	if (quadtree_add_point(qtree->south_east, point)) return true;
+	return false; // this should be unreachable
 }
