@@ -40,11 +40,10 @@ void quadtree_init(struct QuadTree *qtree, struct AABB *boundary) {
 	qtree->point_count = 0;
 }
 
-void quadtree_free(struct QuadTree *qtree) {
+void quadtree_free_children(struct QuadTree *qtree) {
 	// the first child's pointer is the same pointer returned by malloc
 	// for all the children's memory, so we only need to free that
-	if (qtree->north_west) quadtree_free(qtree->north_west);
-	free(qtree);
+	if (qtree->north_west) quadtree_free_children(qtree->north_west);
 }
 
 bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
