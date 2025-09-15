@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -67,6 +68,7 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 		// we don't have room for more points and need to subdivide
 		struct QuadTree *children = malloc(sizeof(*children) * 4);
 		if (children == NULL) {
+			printf("quadtree_add_point(): Failed to allocate children!");
 			return false;
 		}
 		qtree->north_west = &children[0];
@@ -106,5 +108,7 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 	if (quadtree_add_point(qtree->north_east, point)) return true;
 	if (quadtree_add_point(qtree->south_west, point)) return true;
 	if (quadtree_add_point(qtree->south_east, point)) return true;
-	return false; // this should be unreachable
+
+	printf("quadtree_add_point(): Reached unreachable code!");
+	return false;
 }
