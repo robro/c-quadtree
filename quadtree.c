@@ -36,6 +36,14 @@ bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point) {
 	return true;
 }
 
+bool aabb_intersects_range(struct AABB *boundary, struct AABB *range) {
+	if (boundary->max.x < range->min.x || boundary->min.x >= range->max.x ||
+		boundary->max.y < range->min.y || boundary->min.y >= range->max.y) {
+		return false;
+	};
+	return true;
+}
+
 struct Vec2 aabb_get_center(struct AABB *boundary) {
 	return (struct Vec2){
 		.x = boundary->min.x + (boundary->max.x - boundary->min.x) / 2,
@@ -108,14 +116,6 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 			.min = boundary_center,
 			.max = qtree->boundary.max,
 		});
-
-		// add existing points to children
-		for (int i = 0; i < qtree->point_count; ++i) {
-			if (quadtree_add_point(qtree->child_nw, qtree->points[i])) continue;
-			if (quadtree_add_point(qtree->child_ne, qtree->points[i])) continue;
-			if (quadtree_add_point(qtree->child_sw, qtree->points[i])) continue;
-			if (quadtree_add_point(qtree->child_se, qtree->points[i])) continue;
-		}
 	}
 	// add new point to whichever child will accept it
 	if (quadtree_add_point(qtree->child_nw, point)) return true;
@@ -124,5 +124,20 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 	if (quadtree_add_point(qtree->child_se, point)) return true;
 
 	printf("quadtree_add_point(): Failed to add point due to error!");
+	return false;
+}
+
+bool quadtree_point_in_range(struct QuadTree *qtree, struct AABB *range) {
+	if (!aabb_intersects_range(&qtree->boundary, range)) {
+		return false;
+	}
+	for (int i = 0; i < qtree->point_count; ++i) {
+		if (aabb_contains_point(range, qtree->points[i])) return true;
+	}
+	if (qtree->child_nw == NULL) return false;
+	if (quadtree_point_in_range(qtree->child_nw, range)) return true;
+	if (quadtree_point_in_range(qtree->child_ne, range)) return true;
+	if (quadtree_point_in_range(qtree->child_sw, range)) return true;
+	if (quadtree_point_in_range(qtree->child_se, range)) return true;
 	return false;
 }
