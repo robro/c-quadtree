@@ -109,6 +109,6 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 	if (quadtree_add_point(qtree->south_west, point)) return true;
 	if (quadtree_add_point(qtree->south_east, point)) return true;
 
-	printf("quadtree_add_point(): Reached unreachable code!");
+	printf("quadtree_add_point(): Failed to add point due to error!");
 	return false;
 }
