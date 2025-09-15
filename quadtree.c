@@ -59,7 +59,7 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 	}
 	if (qtree->point_count < POINTS_PER_NODE && qtree->north_west == NULL) {
 		// we have room for more points and no children yet (assume if any children are NULL they all are)
-		// so just add the point here
+		// so just add the point here and increment point count
 		qtree->points[qtree->point_count++] = point;
 		return true;
 	}
@@ -101,7 +101,7 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 			if (quadtree_add_point(qtree->south_east, qtree->points[i])) continue;
 		}
 	}
-	// add point to whichever child will accept it
+	// add new point to whichever child will accept it
 	if (quadtree_add_point(qtree->north_west, point)) return true;
 	if (quadtree_add_point(qtree->north_east, point)) return true;
 	if (quadtree_add_point(qtree->south_west, point)) return true;
