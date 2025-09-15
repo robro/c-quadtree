@@ -43,16 +43,29 @@ struct Vec2 aabb_get_center(struct AABB *boundary) {
 	};
 }
 
+void quadtree_free(struct QuadTree *qtree) {
+	if (qtree->north_west) {
+		// the first child's pointer is the same pointer returned by malloc
+		// for all the children's memory, so we only need to free that
+		quadtree_free(qtree->north_west);
+	}
+	free(qtree);
+	qtree = NULL;
+}
+
 void quadtree_init(struct QuadTree *qtree, struct AABB *boundary) {
 	qtree->boundary = *boundary;
 	qtree->point_count = 0;
 	qtree->north_west = NULL;
 }
 
-void quadtree_free_children(struct QuadTree *qtree) {
-	// the first child's pointer is the same pointer returned by malloc
-	// for all the children's memory, so we only need to free that
-	if (qtree->north_west) quadtree_free_children(qtree->north_west);
+struct QuadTree *quadtree_new(struct AABB *boundary) {
+	struct QuadTree *qtree = malloc(sizeof(*qtree));
+	if (qtree == NULL) {
+		return NULL;
+	}
+	quadtree_init(qtree, boundary);
+	return qtree;
 }
 
 bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
