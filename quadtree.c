@@ -1,32 +1,6 @@
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
-#define POINTS_PER_NODE 4
+#include "quadtree.h"
 
 uint qtree_count = 0;
-
-struct Vec2 {
-	float x;
-	float y;
-};
-
-struct AABB {
-	struct Vec2 min;
-	struct Vec2 max;
-};
-
-struct QuadTree {
-	uint point_count;
-	struct AABB boundary;
-	struct Vec2 *points[POINTS_PER_NODE];
-
-	struct QuadTree *child_nw;
-	struct QuadTree *child_ne;
-	struct QuadTree *child_sw;
-	struct QuadTree *child_se;
-};
 
 bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point) {
 	if (point->x < boundary->min.x || point->x >= boundary->max.x ||
@@ -73,7 +47,12 @@ struct QuadTree *quadtree_new(struct AABB *boundary) {
 		return NULL;
 	}
 	quadtree_init(qtree, boundary);
+	qtree_count++;
 	return qtree;
+}
+
+uint quadtree_get_count() {
+	return qtree_count;
 }
 
 bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
