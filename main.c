@@ -45,7 +45,6 @@ int main(void) {
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end_time);
 	work_time = timespec_diff(&end_time, &start_time);
-	printf("overlap count: %d\n", overlap_count);
 	printf("naive overlap check time: %f secs\n", timespec_to_secs(&work_time));
 	overlap_count = 0;
 
@@ -63,8 +62,9 @@ int main(void) {
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end_time);
 	work_time = timespec_diff(&end_time, &start_time);
+	printf("node capacity: %d points\n", QT_NODE_CAPACITY);
 	printf("node count: %d\n", quadtree_get_node_count());
-	printf("overlap count: %d\n", overlap_count);
+	printf("qtree memory: %ld bytes\n", quadtree_get_tree_bytes());
 	printf("qtree overlap check time: %f secs\n", timespec_to_secs(&work_time));
 	overlap_count = 0;
 

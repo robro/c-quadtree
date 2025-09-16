@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 #include "quadtree.h"
 
@@ -63,6 +64,10 @@ uint quadtree_get_node_count() {
 
 uint quadtree_get_point_count() {
 	return point_count;
+}
+
+ulong quadtree_get_tree_bytes() {
+	return (sizeof(struct QuadTree) * qtree_count);
 }
 
 bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {

@@ -8,7 +8,7 @@
 
 #include "util.h"
 
-#define QT_NODE_CAPACITY 4
+#define QT_NODE_CAPACITY 10
 
 struct AABB {
 	struct Vec2 min;
@@ -36,5 +36,7 @@ uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
 uint quadtree_get_node_count();
 
 uint quadtree_get_point_count();
+
+ulong quadtree_get_tree_bytes();
 
 #endif
