@@ -1,3 +1,4 @@
+#include <bits/time.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
@@ -15,16 +16,54 @@ int main(void) {
 	});
 	srand(time(NULL));
 	struct Vec2 points[TOTAL_POINTS];
-	for (int i = 0; i < TOTAL_POINTS; ++i) {
+	struct AABB range;
+	int i, j;
+
+	for (i = 0; i < TOTAL_POINTS; ++i) {
 		points[i] = (struct Vec2){rand() % WIDTH, rand() % HEIGHT};
+	}
+	printf("point count: %d\n", TOTAL_POINTS);
+
+	uint overlap_count = 0;
+	struct timespec start_time;
+	struct timespec end_time;
+	struct timespec work_time;
+
+	// for every point check a range against every other point (SLOW!)
+	clock_gettime(CLOCK_MONOTONIC, &start_time);
+	for (i = 0; i < TOTAL_POINTS; ++i) {
+		range = (struct AABB){
+			.min = {.x = points[i].x, points[i].y},
+			.max = {.x = points[i].x + 5, .y = points[i].y + 5}
+		};
+		for (j = 0; j < TOTAL_POINTS; ++j) {
+			overlap_count += aabb_contains_point(&range, &points[j]);
+		}
+	}
+	clock_gettime(CLOCK_MONOTONIC, &end_time);
+	work_time = timespec_diff(&end_time, &start_time);
+	printf("overlap count: %d\n", overlap_count);
+	printf("naive overlap check time: %f secs\n", timespec_to_secs(&work_time));
+	overlap_count = 0;
+
+	// for every point use quadtree to check for overlap (FAST!)
+	clock_gettime(CLOCK_MONOTONIC, &start_time);
+	for (i = 0; i < TOTAL_POINTS; ++i) {
 		quadtree_add_point(qtree, &points[i]);
 	}
+	for (i = 0; i < TOTAL_POINTS; ++i) {
+		range = (struct AABB){
+			.min = {.x = points[i].x, points[i].y},
+			.max = {.x = points[i].x + 5, .y = points[i].y + 5}
+		};
+		overlap_count += quadtree_points_in_range(qtree, &range);
+	}
+	clock_gettime(CLOCK_MONOTONIC, &end_time);
+	work_time = timespec_diff(&end_time, &start_time);
 	printf("node count: %d\n", quadtree_get_node_count());
-	printf("point count: %d\n", quadtree_get_point_count());
+	printf("overlap count: %d\n", overlap_count);
+	printf("qtree overlap check time: %f secs\n", timespec_to_secs(&work_time));
+	overlap_count = 0;
 
-	printf("Range contains a point: %d\n", quadtree_point_in_range(qtree, &(struct AABB){
-		.min = {.x = 0, .y = 0},
-		.max = {.x = 1, .y = 1}
-	}));
 	return 0;
 }

@@ -6,12 +6,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#define QT_NODE_CAPACITY 4
+#include "util.h"
 
-struct Vec2 {
-	float x;
-	float y;
-};
+#define QT_NODE_CAPACITY 4
 
 struct AABB {
 	struct Vec2 min;
@@ -26,13 +23,15 @@ struct QuadTree {
 	struct QuadTree *children[4];
 };
 
+bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point);
+
 struct QuadTree *quadtree_new(struct AABB *boundary);
 
 void quadtree_free(struct QuadTree *qtree);
 
 bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point);
 
-bool quadtree_point_in_range(struct QuadTree *qtree, struct AABB *range);
+uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
 
 uint quadtree_get_node_count();
 

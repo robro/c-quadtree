@@ -113,19 +113,20 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 	return false;
 }
 
-bool quadtree_point_in_range(struct QuadTree *qtree, struct AABB *range) {
+uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range) {
 	if (qtree->point_count == 0) {
-		return false;
+		return 0;
 	}
 	if (!aabb_intersects_range(&qtree->boundary, range)) {
-		return false;
+		return 0;
 	}
+	uint points_in_range = 0;
 	for (int i = 0; i < qtree->point_count; ++i) {
-		if (aabb_contains_point(range, qtree->points[i])) return true;
+		points_in_range += aabb_contains_point(range, qtree->points[i]);
 	}
-	if (qtree->children[0] == NULL) return false;
+	if (qtree->children[0] == NULL) return points_in_range;
 	for (int i = 0; i < 4; ++i) {
-		if (quadtree_point_in_range(qtree->children[i], range)) return true;
+		points_in_range += quadtree_points_in_range(qtree->children[i], range);
 	}
-	return false;
+	return points_in_range;
 }
