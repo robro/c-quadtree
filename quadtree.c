@@ -114,6 +114,9 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
 }
 
 bool quadtree_point_in_range(struct QuadTree *qtree, struct AABB *range) {
+	if (qtree->point_count == 0) {
+		return false;
+	}
 	if (!aabb_intersects_range(&qtree->boundary, range)) {
 		return false;
 	}

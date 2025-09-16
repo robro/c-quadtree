@@ -4,7 +4,7 @@
 
 #include "quadtree.h"
 
-#define TOTAL_POINTS 1000
+#define TOTAL_POINTS 10000
 #define WIDTH 100
 #define HEIGHT 100
 
@@ -21,5 +21,10 @@ int main(void) {
 	}
 	printf("node count: %d\n", quadtree_get_node_count());
 	printf("point count: %d\n", quadtree_get_point_count());
+
+	printf("Range contains a point: %d\n", quadtree_point_in_range(qtree, &(struct AABB){
+		.min = {.x = 0, .y = 0},
+		.max = {.x = 1, .y = 1}
+	}));
 	return 0;
 }
