@@ -4,7 +4,7 @@
 
 #include "quadtree.h"
 
-#define TOTAL_POINTS 100
+#define TOTAL_POINTS 1000
 #define WIDTH 100
 #define HEIGHT 100
 

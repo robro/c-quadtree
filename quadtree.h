@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#define POINTS_PER_NODE 4
+#define QT_NODE_CAPACITY 4
 
 struct Vec2 {
 	float x;
@@ -19,15 +19,11 @@ struct AABB {
 };
 
 struct QuadTree {
-	uint point_count;
 	uint depth;
+	uint point_count;
 	struct AABB boundary;
-	struct Vec2 *points[POINTS_PER_NODE];
-
-	struct QuadTree *child_nw;
-	struct QuadTree *child_ne;
-	struct QuadTree *child_sw;
-	struct QuadTree *child_se;
+	struct Vec2 *points[QT_NODE_CAPACITY];
+	struct QuadTree *children[4];
 };
 
 struct QuadTree *quadtree_new(struct AABB *boundary);
