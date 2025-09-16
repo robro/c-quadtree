@@ -20,7 +20,10 @@ int main(void) {
 	int i, j;
 
 	for (i = 0; i < TOTAL_POINTS; ++i) {
-		points[i] = (struct Vec2){rand() % WIDTH, rand() % HEIGHT};
+		points[i] = (struct Vec2){
+			(float)rand() / RAND_MAX * WIDTH,
+			(float)rand() / RAND_MAX * HEIGHT
+		};
 	}
 	printf("point count: %d\n", TOTAL_POINTS);
 
