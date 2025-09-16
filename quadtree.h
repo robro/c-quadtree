@@ -1,3 +1,6 @@
+#ifndef QUADTREE_H
+#define QUADTREE_H
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +20,7 @@ struct AABB {
 
 struct QuadTree {
 	uint point_count;
+	uint depth;
 	struct AABB boundary;
 	struct Vec2 *points[POINTS_PER_NODE];
 
@@ -34,4 +38,8 @@ bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point);
 
 bool quadtree_point_in_range(struct QuadTree *qtree, struct AABB *range);
 
-uint quadtree_get_count();
+uint quadtree_get_node_count();
+
+uint quadtree_get_point_count();
+
+#endif
