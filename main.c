@@ -5,12 +5,13 @@
 
 #include "quadtree.h"
 
-#define BRUTEFORCE 0
+#define BRUTEFORCE 1
 
 const uint TOTAL_POINTS = 10000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
 const uint FRAMES = 60;
+const uint RANGE_SIZE = 5;
 
 int main(void) {
 	struct QuadTree *qtree = quadtree_new(&(struct AABB){
@@ -21,20 +22,24 @@ int main(void) {
 		printf("ERROR: Failed to create quadtree!\n");
 		return 1;
 	}
+
 	srand(time(NULL));
 	struct Vec2 points[TOTAL_POINTS];
-	struct AABB range;
+	struct AABB ranges[TOTAL_POINTS];
 	int i, j;
 
 	for (i = 0; i < TOTAL_POINTS; ++i) {
 		points[i] = (struct Vec2){
-			(float)rand() / RAND_MAX * WIDTH,
-			(float)rand() / RAND_MAX * HEIGHT
+			.x = (float)rand() / RAND_MAX * WIDTH,
+			.y = (float)rand() / RAND_MAX * HEIGHT
+		};
+		ranges[i] = (struct AABB){
+			.min = {.x = points[j].x, .y = points[j].y},
+			.max = {.x = points[j].x + RANGE_SIZE, .y = points[j].y + RANGE_SIZE}
 		};
 	}
 	printf("point count: %d\n", TOTAL_POINTS);
 
-	uint overlap_count = 0;
 	struct timespec start_time;
 	struct timespec end_time;
 	struct timespec work_time;
@@ -43,18 +48,13 @@ int main(void) {
 	// for every point check a range against every other point (SLOW!)
 	clock_gettime(CLOCK_MONOTONIC, &start_time);
 	for (i = 0; i < TOTAL_POINTS; ++i) {
-		range = (struct AABB){
-			.min = {.x = points[i].x, points[i].y},
-			.max = {.x = points[i].x + 5, .y = points[i].y + 5}
-		};
 		for (j = 0; j < TOTAL_POINTS; ++j) {
-			overlap_count += aabb_contains_point(&range, &points[j]);
+			aabb_contains_point(&ranges[i], &points[j]);
 		}
 	}
 	clock_gettime(CLOCK_MONOTONIC, &end_time);
 	work_time = timespec_diff(&end_time, &start_time);
-	printf("naive overlap check time: %f secs\n", timespec_to_secs(&work_time));
-	overlap_count = 0;
+	printf("bruteforce time: %f secs\n", timespec_to_secs(&work_time));
 #endif
 
 	// for every point use quadtree to check for overlap (FAST!)
@@ -63,18 +63,13 @@ int main(void) {
 		quadtree_clear(qtree);
 		quadtree_add_points(qtree, points, TOTAL_POINTS);
 		for (j = 0; j < TOTAL_POINTS; ++j) {
-			range = (struct AABB){
-				.min = {.x = points[j].x, points[j].y},
-				.max = {.x = points[j].x + 5, .y = points[j].y + 5}
-			};
-			overlap_count += quadtree_points_in_range(qtree, &range);
+			quadtree_points_in_range(qtree, &ranges[i]);
 		}
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
 		// printf("node capacity: %d points\n", QT_NODE_CAPACITY);
 		// printf("node count: %d\n", qtree->node_count);
-		printf("qtree time: %f secs\n", timespec_to_secs(&work_time));
-		overlap_count = 0;
+		printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
 	}
 
 	free(qtree);
