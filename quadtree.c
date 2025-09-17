@@ -1,6 +1,4 @@
 #include <assert.h>
-#include <stdio.h>
-#include <sys/types.h>
 
 #include "quadtree.h"
 
