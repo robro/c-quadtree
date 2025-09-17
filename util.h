@@ -13,7 +13,18 @@ struct Vec2 {
 	float y;
 };
 
+struct AABB {
+	struct Vec2 min;
+	struct Vec2 max;
+};
+
 #define VEC_ZERO (struct Vec2){0, 0}
+
+bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point);
+
+bool aabb_intersects_range(struct AABB *boundary, struct AABB *range);
+
+struct Vec2 aabb_get_center(struct AABB *boundary);
 
 struct timespec timespec_diff(const struct timespec *time_a, const struct timespec *time_b);
 

@@ -8,35 +8,26 @@
 
 #include "util.h"
 
+#define QT_MAX_NODES 2000
 #define QT_NODE_CAPACITY 10
 
-struct AABB {
-	struct Vec2 min;
-	struct Vec2 max;
-};
-
-struct QuadTree {
+struct QuadTreeNode {
 	uint depth;
 	uint point_count;
 	struct AABB boundary;
 	struct Vec2 *points[QT_NODE_CAPACITY];
-	struct QuadTree *children[4];
+	struct QuadTreeNode *children[4];
 };
 
-bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point);
+struct QuadTree {
+	uint node_count;
+	struct QuadTreeNode nodes[QT_MAX_NODES];
+};
 
 struct QuadTree *quadtree_new(struct AABB *boundary);
-
-void quadtree_free(struct QuadTree *qtree);
 
 bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point);
 
 uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
-
-uint quadtree_get_node_count();
-
-uint quadtree_get_point_count();
-
-ulong quadtree_get_tree_bytes();
 
 #endif

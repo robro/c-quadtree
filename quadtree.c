@@ -4,134 +4,93 @@
 
 #include "quadtree.h"
 
-uint qtree_count = 0;
-uint point_count = 0;
-
-bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point) {
-	if (point->x < boundary->min.x || point->x >= boundary->max.x ||
-		point->y < boundary->min.y || point->y >= boundary->max.y) {
-		return false;
-	}
-	return true;
-}
-
-bool aabb_intersects_range(struct AABB *boundary, struct AABB *range) {
-	if (boundary->max.x < range->min.x || boundary->min.x >= range->max.x ||
-		boundary->max.y < range->min.y || boundary->min.y >= range->max.y) {
-		return false;
-	};
-	return true;
-}
-
-struct Vec2 aabb_get_center(struct AABB *boundary) {
-	return (struct Vec2){
-		.x = boundary->min.x + (boundary->max.x - boundary->min.x) / 2,
-		.y = boundary->min.y + (boundary->max.y - boundary->min.y) / 2,
-	};
-}
-
-void quadtree_free(struct QuadTree *qtree) {
-	if (qtree->children[0]) {
-		// the first child's pointer is the same pointer returned by malloc
-		// for all the children's memory, so we only need to free that
-		quadtree_free(qtree->children[0]);
-	}
-	free(qtree);
-	qtree = NULL;
-}
-
-void quadtree_init(struct QuadTree *qtree, struct AABB *boundary, uint depth) {
-	assert(boundary->min.x < boundary->max.x && boundary->min.y < boundary->max.y);
-	qtree->boundary = *boundary;
-	qtree->point_count = 0;
-	qtree->depth = depth;
-	qtree->children[0] = NULL;
-	qtree_count++;
+void quadtree_node_init(struct QuadTreeNode *node, struct AABB *boundary, uint depth) {
+	node->boundary = *boundary;
+	node->depth = depth;
+	node->point_count = 0;
+	node->children[0] = NULL;
 }
 
 struct QuadTree *quadtree_new(struct AABB *boundary) {
+	assert(boundary->min.x < boundary->max.x && boundary->min.y < boundary->max.y);
 	struct QuadTree *qtree = malloc(sizeof(*qtree));
 	if (qtree == NULL) {
+		printf("ERROR: Failed to allocate quadtree!\n");
 		return NULL;
 	}
-	quadtree_init(qtree, boundary, 0);
+	quadtree_node_init(qtree->nodes, boundary, 0);
+	qtree->node_count = 1;
 	return qtree;
 }
 
-uint quadtree_get_node_count() {
-	return qtree_count;
-}
-
-uint quadtree_get_point_count() {
-	return point_count;
-}
-
-ulong quadtree_get_tree_bytes() {
-	return (sizeof(struct QuadTree) * qtree_count);
-}
-
-bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
-	if (!aabb_contains_point(&qtree->boundary, point)) {
+bool quadtree_node_add_point(struct QuadTreeNode *node, struct Vec2 *point, struct QuadTree *qtree) {
+	if (!aabb_contains_point(&node->boundary, point)) {
 		return false;
 	}
-	if (qtree->point_count < QT_NODE_CAPACITY && qtree->children[0] == NULL) {
+	if (node->point_count < QT_NODE_CAPACITY && node->children[0] == NULL) {
 		// we have room for more points and no children yet (assume if any children are NULL they all are)
 		// so just add the point here and increment point count
-		qtree->points[qtree->point_count++] = point;
-		point_count++;
+		node->points[node->point_count++] = point;
 		return true;
 	}
-	if (qtree->children[0] == NULL) {
-		// we don't have room for more points and need to subdivide
-		struct QuadTree *children = malloc(sizeof(*children) * 4);
-		if (children == NULL) {
-			printf("ERROR: Failed to allocate children!\n");
-			return false;
-		}
+	if (node->children[0] == NULL && qtree->node_count > QT_MAX_NODES - 4) {
+		printf("ERROR: Cannot add more nodes! Node limit: %d\n", QT_MAX_NODES);
+		return false;
+	}
+	if (node->children[0] == NULL) {
 		for (int i = 0; i < 4; ++i) {
-			qtree->children[i] = &children[i];
+			node->children[i] = &qtree->nodes[qtree->node_count];
+			qtree->node_count++;
 		}
-		struct Vec2 boundary_center = aabb_get_center(&qtree->boundary);
-		quadtree_init(qtree->children[0], &(struct AABB){
-			.min = qtree->boundary.min,
+		// we don't have room for more points and need to subdivide
+		struct Vec2 boundary_center = aabb_get_center(&node->boundary);
+		quadtree_node_init(node->children[0], &(struct AABB){
+			.min = node->boundary.min,
 			.max = boundary_center,
-		}, qtree->depth + 1);
-		quadtree_init(qtree->children[1], &(struct AABB){
-			.min = {.x = boundary_center.x, .y = qtree->boundary.min.y},
-			.max = {.x = qtree->boundary.max.x, .y = boundary_center.y}
-		}, qtree->depth + 1);
-		quadtree_init(qtree->children[2], &(struct AABB){
-			.min = {.x = qtree->boundary.min.x, .y = boundary_center.y},
-			.max = {.x = boundary_center.x, .y = qtree->boundary.max.y}
-		}, qtree->depth + 1);
-		quadtree_init(qtree->children[3], &(struct AABB){
+		}, node->depth + 1);
+		quadtree_node_init(node->children[1], &(struct AABB){
+			.min = {.x = boundary_center.x, .y = node->boundary.min.y},
+			.max = {.x = node->boundary.max.x, .y = boundary_center.y}
+		}, node->depth + 1);
+		quadtree_node_init(node->children[2], &(struct AABB){
+			.min = {.x = node->boundary.min.x, .y = boundary_center.y},
+			.max = {.x = boundary_center.x, .y = node->boundary.max.y}
+		}, node->depth + 1);
+		quadtree_node_init(node->children[3], &(struct AABB){
 			.min = boundary_center,
-			.max = qtree->boundary.max,
-		}, qtree->depth + 1);
+			.max = node->boundary.max,
+		}, node->depth + 1);
 	}
 	// add new point to whichever child will accept it
 	// it should always be accepted unless something weird has happened
 	for (int i = 0; i < 4; ++i) {
-		if (quadtree_add_point(qtree->children[i], point)) return true;
+		if (quadtree_node_add_point(node->children[i], point, qtree)) return true;
 	}
-	printf("ERROR: Unreachable code reached!\n");
 	return false;
 }
 
-uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range) {
-	if (qtree->point_count == 0) {
+bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point) {
+	return quadtree_node_add_point(qtree->nodes, point, qtree);
+}
+
+uint quadtree_node_points_in_range(struct QuadTreeNode *node, struct AABB *range) {
+	if (node->point_count == 0) {
 		return 0;
 	}
-	if (!aabb_intersects_range(&qtree->boundary, range)) {
+	if (!aabb_intersects_range(&node->boundary, range)) {
 		return 0;
 	}
 	uint points_in_range = 0;
-	for (int i = 0; i < qtree->point_count; ++i) {
-		points_in_range += aabb_contains_point(range, qtree->points[i]);
+	for (int i = 0; i < node->point_count; ++i) {
+		points_in_range += aabb_contains_point(range, node->points[i]);
 	}
-	if (qtree->children[0] == NULL) return points_in_range;
+	if (node->children[0] == NULL) return points_in_range;
 	for (int i = 0; i < 4; ++i) {
-		points_in_range += quadtree_points_in_range(qtree->children[i], range);
+		points_in_range += quadtree_node_points_in_range(node->children[i], range);
 	}
 	return points_in_range;
+}
+
+uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range) {
+	return quadtree_node_points_in_range(qtree->nodes, range);
 }

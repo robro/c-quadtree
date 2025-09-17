@@ -9,6 +9,8 @@
 #define WIDTH 100
 #define HEIGHT 100
 
+#define BENCH_BRUTEFORCE 0
+
 int main(void) {
 	struct QuadTree *qtree = quadtree_new(&(struct AABB){
 		.min = {.x = 0, .y = 0},
@@ -32,6 +34,7 @@ int main(void) {
 	struct timespec end_time;
 	struct timespec work_time;
 
+#if BENCH_BRUTEFORCE
 	// for every point check a range against every other point (SLOW!)
 	clock_gettime(CLOCK_MONOTONIC, &start_time);
 	for (i = 0; i < TOTAL_POINTS; ++i) {
@@ -47,12 +50,15 @@ int main(void) {
 	work_time = timespec_diff(&end_time, &start_time);
 	printf("naive overlap check time: %f secs\n", timespec_to_secs(&work_time));
 	overlap_count = 0;
+#endif
 
 	// for every point use quadtree to check for overlap (FAST!)
 	clock_gettime(CLOCK_MONOTONIC, &start_time);
+	printf("Adding points...\n");
 	for (i = 0; i < TOTAL_POINTS; ++i) {
 		quadtree_add_point(qtree, &points[i]);
 	}
+	printf("Processing collisions...\n");
 	for (i = 0; i < TOTAL_POINTS; ++i) {
 		range = (struct AABB){
 			.min = {.x = points[i].x, points[i].y},
@@ -63,8 +69,7 @@ int main(void) {
 	clock_gettime(CLOCK_MONOTONIC, &end_time);
 	work_time = timespec_diff(&end_time, &start_time);
 	printf("node capacity: %d points\n", QT_NODE_CAPACITY);
-	printf("node count: %d\n", quadtree_get_node_count());
-	printf("qtree memory: %ld bytes\n", quadtree_get_tree_bytes());
+	printf("node count: %d\n", qtree->node_count);
 	printf("qtree overlap check time: %f secs\n", timespec_to_secs(&work_time));
 	overlap_count = 0;
 
