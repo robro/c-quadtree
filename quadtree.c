@@ -13,11 +13,10 @@ void quadtree_node_init(struct QuadTreeNode *node, struct AABB *boundary, uint d
 
 void quadtree_clear(struct QuadTree *qtree) {
 	qtree->node_count = 1;
-	quadtree_node_init(qtree->nodes, &qtree->boundary, 0);
+	quadtree_node_init(qtree->nodes, &qtree->nodes[0].boundary, 0);
 }
 
 void quadtree_init(struct QuadTree *qtree, struct AABB *boundary) {
-	qtree->boundary = *boundary;
 	qtree->node_count = 1;
 	quadtree_node_init(qtree->nodes, boundary, 0);
 }

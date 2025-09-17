@@ -20,7 +20,6 @@ struct QuadTreeNode {
 };
 
 struct QuadTree {
-	struct AABB boundary;
 	uint node_count;
 	struct QuadTreeNode nodes[QT_MAX_NODES];
 };
