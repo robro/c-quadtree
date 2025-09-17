@@ -5,12 +5,12 @@
 
 #include "quadtree.h"
 
-#define TOTAL_POINTS 10000
-#define WIDTH 100
-#define HEIGHT 100
-#define FRAMES 60
+#define BRUTEFORCE 0
 
-#define BENCH_BRUTEFORCE 0
+const uint TOTAL_POINTS = 10000;
+const uint WIDTH = 100;
+const uint HEIGHT = 100;
+const uint FRAMES = 60;
 
 int main(void) {
 	struct QuadTree *qtree = quadtree_new(&(struct AABB){
@@ -39,7 +39,7 @@ int main(void) {
 	struct timespec end_time;
 	struct timespec work_time;
 
-#if BENCH_BRUTEFORCE
+#if BRUTEFORCE
 	// for every point check a range against every other point (SLOW!)
 	clock_gettime(CLOCK_MONOTONIC, &start_time);
 	for (i = 0; i < TOTAL_POINTS; ++i) {
