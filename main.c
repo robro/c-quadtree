@@ -1,11 +1,6 @@
-#include <bits/time.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
-
 #include "quadtree.h"
 
-#define BRUTEFORCE 1
+#define BRUTEFORCE 0
 
 const uint TOTAL_POINTS = 10000;
 const uint WIDTH = 100;
