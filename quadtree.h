@@ -20,13 +20,16 @@ struct QuadTreeNode {
 };
 
 struct QuadTree {
+	struct AABB boundary;
 	uint node_count;
 	struct QuadTreeNode nodes[QT_MAX_NODES];
 };
 
 struct QuadTree *quadtree_new(struct AABB *boundary);
 
-bool quadtree_add_point(struct QuadTree *qtree, struct Vec2 *point);
+void quadtree_clear(struct QuadTree *qtree);
+
+void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, uint point_count);
 
 uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
 
