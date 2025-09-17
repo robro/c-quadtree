@@ -27,6 +27,8 @@ struct QuadTree {
 
 struct QuadTree *quadtree_new(struct AABB *boundary);
 
+void quadtree_init(struct QuadTree *qtree, struct AABB *boundary);
+
 void quadtree_clear(struct QuadTree *qtree);
 
 void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, uint point_count);

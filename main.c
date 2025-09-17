@@ -77,5 +77,6 @@ int main(void) {
 		overlap_count = 0;
 	}
 
+	free(qtree);
 	return 0;
 }
