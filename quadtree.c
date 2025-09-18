@@ -4,28 +4,54 @@
 
 #include "quadtree.h"
 
+#define QT_DEFAULT_CAPACITY 8
+#define QT_NODE_CAPACITY 10
+
+struct QuadTreeNode {
+	uint point_count;
+	struct AABB boundary;
+	struct Vec2 *points[QT_NODE_CAPACITY];
+	int child_indices[4];
+};
+
+struct QuadTree {
+	uint size;
+	uint capacity;
+	struct QuadTreeNode *nodes;
+};
+
 void quadtree_node_init(struct QuadTreeNode *node, struct AABB *boundary) {
 	node->point_count = 0;
 	node->boundary = *boundary;
 	node->child_indices[0] = -1;
 }
 
-void quadtree_clear(struct QuadTree *qtree) {
-	qtree->size = 1;
-	quadtree_node_init(qtree->nodes, &qtree->nodes[0].boundary);
-}
-
-bool quadtree_init(struct QuadTree *qtree, struct AABB *boundary) {
+struct QuadTree* quadtree_new(struct AABB *boundary) {
 	assert(boundary->min.x < boundary->max.x && boundary->min.y < boundary->max.y);
+	struct QuadTree *qtree = malloc(sizeof(*qtree));
+	if (qtree == NULL) {
+		return NULL;
+	}
 	struct QuadTreeNode *nodes = malloc(sizeof(*nodes) * QT_DEFAULT_CAPACITY);
 	if (nodes == NULL) {
-		return false;
+		free(qtree);
+		return NULL;
 	}
 	qtree->size = 1;
 	qtree->capacity = QT_DEFAULT_CAPACITY;
 	qtree->nodes = nodes;
-	quadtree_node_init(qtree->nodes, boundary);
-	return true;
+	quadtree_node_init(&qtree->nodes[0], boundary);
+	return qtree;
+}
+
+void quadtree_clear(struct QuadTree *qtree) {
+	qtree->size = 1;
+	quadtree_node_init(&qtree->nodes[0], &qtree->nodes[0].boundary);
+}
+
+void quadtree_free(struct QuadTree *qtree) {
+	free(qtree->nodes);
+	free(qtree);
 }
 
 bool quadtree_node_add_point(struct QuadTree *qtree, int index, struct Vec2 *point) {

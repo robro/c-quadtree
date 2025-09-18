@@ -8,25 +8,13 @@
 
 #include "util.h"
 
-#define QT_NODE_CAPACITY 10
-#define QT_DEFAULT_CAPACITY 8
+struct QuadTree;
 
-struct QuadTreeNode {
-	uint point_count;
-	struct AABB boundary;
-	struct Vec2 *points[QT_NODE_CAPACITY];
-	int child_indices[4];
-};
-
-struct QuadTree {
-	uint size;
-	uint capacity;
-	struct QuadTreeNode *nodes;
-};
-
-bool quadtree_init(struct QuadTree *qtree, struct AABB *boundary);
+struct QuadTree* quadtree_new(struct AABB *boundary);
 
 void quadtree_clear(struct QuadTree *qtree);
+
+void quadtree_free(struct QuadTree *qtree);
 
 void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, int point_count);
 
