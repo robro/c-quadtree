@@ -2,19 +2,19 @@
 
 #define BRUTEFORCE 0
 
-const uint TOTAL_POINTS = 10000;
+const uint TOTAL_POINTS = 40;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
-const uint FRAMES = 60;
+const uint FRAMES = 10;
 const uint RANGE_SIZE = 5;
 
 int main(void) {
-	struct QuadTree *qtree = quadtree_new(&(struct AABB){
+	struct QuadTree qtree;
+	if (!quadtree_init(&qtree, &(struct AABB){
 		.min = {.x = 0, .y = 0},
 		.max = {.x = WIDTH, .y = HEIGHT},
-	});
-	if (qtree == NULL) {
-		printf("ERROR: Failed to create quadtree!\n");
+	})) {
+		printf("ERROR: Failed to initialize quadtree!\n");
 		return 1;
 	}
 
@@ -55,10 +55,10 @@ int main(void) {
 	// for every point use quadtree to check for overlap (FAST!)
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
-		quadtree_clear(qtree);
-		quadtree_add_points(qtree, points, TOTAL_POINTS);
+		quadtree_clear(&qtree);
+		quadtree_add_points(&qtree, points, TOTAL_POINTS);
 		for (j = 0; j < TOTAL_POINTS; ++j) {
-			quadtree_points_in_range(qtree, &ranges[i]);
+			quadtree_points_in_range(&qtree, &ranges[i]);
 		}
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
@@ -67,6 +67,6 @@ int main(void) {
 		printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
 	}
 
-	free(qtree);
+	free(qtree.nodes);
 	return 0;
 }
