@@ -1,8 +1,9 @@
 #include "quadtree.h"
+#include <stdio.h>
 
 #define BRUTEFORCE 0
 
-const uint TOTAL_POINTS = 40;
+const uint TOTAL_POINTS = 10000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
 const uint FRAMES = 10;

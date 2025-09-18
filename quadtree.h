@@ -15,7 +15,7 @@ struct QuadTreeNode {
 	uint point_count;
 	struct AABB boundary;
 	struct Vec2 *points[QT_NODE_CAPACITY];
-	struct QuadTreeNode *children[4];
+	int child_indices[4];
 };
 
 struct QuadTree {
@@ -28,7 +28,7 @@ bool quadtree_init(struct QuadTree *qtree, struct AABB *boundary);
 
 void quadtree_clear(struct QuadTree *qtree);
 
-void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, uint point_count);
+void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, int point_count);
 
 uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
 
