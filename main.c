@@ -3,11 +3,11 @@
 
 #include "quadtree.h"
 
-#define BRUTEFORCE 1
-#define QUADPOINTS 1
+#define BRUTEFORCE 0
+#define QUADPOINTS 0
 #define QUADCIRCLE 1
 
-const uint ENTITY_COUNT = 1000;
+const uint ENTITY_COUNT = 100;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
 const uint FRAMES = 1;
@@ -23,7 +23,7 @@ int main(void) {
 		return 1;
 	}
 
-	srand(time(NULL));
+	srand(0);
 	struct Vec2 points[ENTITY_COUNT];
 	struct AABB ranges[ENTITY_COUNT];
 	struct Circle circles[ENTITY_COUNT];
@@ -84,18 +84,28 @@ int main(void) {
 
 #if QUADCIRCLE
 	// for every circle use quadtree to check for overlap (FAST!)
+	struct Circle **overlapping_circles;
 	for (i = 0; i < FRAMES; ++i) {
 		overlap_count = 0;
 		// clock_gettime(CLOCK_MONOTONIC, &start_time);
 		quadtree_clear(qtree);
 		quadtree_add_circles(qtree, circles, ENTITY_COUNT);
+		printf("Added circles to quadtree\n");
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			overlap_count += quadtree_circles_intersecting_circle(qtree, &circles[j]);
+			printf("orig circle: x= %f, y= %f, r= %f\n", circles[j].position.x, circles[j].position.y, circles[j].radius);
+			overlapping_circles = quadtree_circles_intersecting_circle(qtree, &circles[j]);
+			while (overlapping_circles[overlap_count]) {
+				printf("overlapping: x= %f, y= %f, r= %f\n", overlapping_circles[overlap_count]->position.x, overlapping_circles[overlap_count]->position.y, overlapping_circles[overlap_count]->radius);
+				overlap_count++;
+			}
+			printf("overlapping circles: %d\n", overlap_count);
+			overlap_count = 0;
+			free(overlapping_circles);
 		}
 		// clock_gettime(CLOCK_MONOTONIC, &end_time);
 		// work_time = timespec_diff(&end_time, &start_time);
 		// printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
-		printf("overlap count: %d\n", overlap_count);
+		// printf("overlap count: %d\n", overlap_count);
 	}
 #endif
 

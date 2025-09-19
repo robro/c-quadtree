@@ -23,6 +23,12 @@ struct Circle {
 	struct Vec2 position;
 };
 
+struct CircleArray {
+	uint size;
+	uint capacity;
+	struct Circle **array;
+};
+
 #define VEC_ZERO (struct Vec2){0, 0}
 
 bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point);
@@ -34,6 +40,10 @@ bool aabb_intersects_circle(struct AABB *boundary, struct Circle *circle);
 struct Vec2 aabb_get_center(struct AABB *boundary);
 
 bool circle_intersects_circle(struct Circle *circle_1, struct Circle *circle_2);
+
+bool circle_array_init(struct CircleArray *circle_array);
+
+bool circle_array_push_back(struct CircleArray *circle_array, struct Circle *circle);
 
 struct timespec timespec_diff(const struct timespec *time_a, const struct timespec *time_b);
 

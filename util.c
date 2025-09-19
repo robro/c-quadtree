@@ -52,6 +52,30 @@ bool circle_intersects_circle(struct Circle *circle_1, struct Circle *circle_2) 
 	return vec2_length(&difference) < circle_1->radius + circle_2->radius;
 }
 
+bool circle_array_init(struct CircleArray *circle_array) {
+	struct Circle **array = malloc(sizeof(array) * 2);
+	if (array == NULL) {
+		return false;
+	}
+	circle_array->size = 0;
+	circle_array->capacity = 2;
+	circle_array->array = array;
+	return true;
+}
+
+bool circle_array_push_back(struct CircleArray *circle_array, struct Circle *circle) {
+	if (circle_array->size == circle_array->capacity) {
+		struct Circle **new_array = realloc(circle_array->array, sizeof(struct Circle *) * circle_array->capacity * 2);
+		if (new_array == NULL) {
+			return false;
+		}
+		circle_array->array = new_array;
+		circle_array->capacity *= 2;
+	}
+	circle_array->array[circle_array->size++] = circle;
+	return true;
+}
+
 bool aabb_intersects_circle(struct AABB *boundary, struct Circle *circle) {
 	struct Vec2 boundary_center = aabb_get_center(boundary);
 	struct Vec2 difference = {

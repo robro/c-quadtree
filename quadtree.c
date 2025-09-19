@@ -179,14 +179,11 @@ bool quadtree_node_add_circle(struct QuadTree *qtree, int index, struct Circle *
 	}
 	// add new entity to all children that will accept it (it can be in multiple)
 	// it should always be accepted unless something weird has happened
-	bool accepted = false;
 	for (int i = 0; i < 4; ++i) {
-		if (quadtree_node_add_circle(qtree, node->child_indices[i], circle)) accepted = true;
+		if (quadtree_node_add_circle(qtree, node->child_indices[i], circle)) return true;
 	}
-	if (!accepted) {
-		printf("ERROR: Circle not added for some reason!\n");
-	}
-	return accepted;
+	printf("ERROR: Reached unreachable code!\n");
+	return false;
 }
 
 void quadtree_add_circles(struct QuadTree *qtree, struct Circle *circles, int circle_count) {
@@ -220,27 +217,41 @@ uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range) {
 	return quadtree_node_points_in_range(qtree, 0, range);
 }
 
-uint quadtree_node_circles_intersecting_circle(struct QuadTree *qtree, int index, struct Circle *circle) {
+void quadtree_node_circles_intersecting_circle(struct QuadTree *qtree, int index, struct Circle *circle, struct CircleArray *circle_array) {
 	struct QuadTreeNode *node = &qtree->nodes[index];
 	
 	if (node->entity_count == 0) {
-		return 0;
+		return;
 	}
 	if (!aabb_intersects_circle(&node->boundary, circle)) {
-		return 0;
+		return;
 	}
-	uint circles_intersecting_circle = 0;
 	for (int i = 0; i < node->entity_count; ++i) {
-		if (circle == node->entities[i]) continue;
-		circles_intersecting_circle += circle_intersects_circle(circle, node->entities[i]);
+		if (circle == node->entities[i]) {
+			continue;
+		}
+		if (circle_intersects_circle(circle, node->entities[i])) {
+			circle_array_push_back(circle_array, node->entities[i]);
+		}
 	}
-	if (node->child_indices[0] < 0) return circles_intersecting_circle;
+	if (node->child_indices[0] < 0) {
+		return;
+	}
 	for (int i = 0; i < 4; ++i) {
-		circles_intersecting_circle += quadtree_node_circles_intersecting_circle(qtree, node->child_indices[i], circle);
+		quadtree_node_circles_intersecting_circle(qtree, node->child_indices[i], circle, circle_array);
 	}
-	return circles_intersecting_circle;
 }
 
-uint quadtree_circles_intersecting_circle(struct QuadTree *qtree, struct Circle *circle) {
-	return quadtree_node_circles_intersecting_circle(qtree, 0, circle);
+/*
+ * Returns pointer to null terminated array of circles overlapping with input circle.
+ * User is responsible for freeing array after use.
+ */
+struct Circle **quadtree_circles_intersecting_circle(struct QuadTree *qtree, struct Circle *circle) {
+	struct CircleArray circle_array;
+	if (!circle_array_init(&circle_array)) {
+		return NULL;
+	}
+	quadtree_node_circles_intersecting_circle(qtree, 0, circle, &circle_array);
+	circle_array_push_back(&circle_array, NULL);
+	return circle_array.array;
 }
