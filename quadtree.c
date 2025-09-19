@@ -146,6 +146,102 @@ uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range) {
 	return quadtree_node_points_in_range(qtree, 0, range);
 }
 
+bool quadtree_node_add_range(struct QuadTree *qtree, int index, struct AABB *range) {
+	struct QuadTreeNode *node = &qtree->nodes[index];
+
+	if (!aabb_intersects_range(&node->boundary, range)) {
+		return false;
+	}
+	if (node->entity_count < QT_NODE_CAPACITY && node->child_indices[0] < 0) {
+		// we have room for more entities and no children yet
+		// assume if any child indices are invalid they all are
+		// so just add the entity here and increment entity count
+		node->entities[node->entity_count++] = range;
+		return true;
+	}
+	if (node->child_indices[0] < 0 && qtree->size > qtree->capacity - 4) {
+		// realloc the nodes to fit more entities (double capacity)
+		struct QuadTreeNode *new_nodes = realloc(
+			qtree->nodes, sizeof(*new_nodes) * qtree->capacity * 2
+		);
+		if (new_nodes == NULL) {
+			printf("ERROR: Failed to allocate new memory! Can't add point!\n");
+			return false;
+		}
+		qtree->nodes = new_nodes;
+		qtree->capacity *= 2;
+		node = &qtree->nodes[index];
+		printf("QuadTree node capacity doubled to: %d nodes\n", qtree->capacity);
+	}
+	if (node->child_indices[0] < 0) {
+		// we don't have room for more entities and need to subdivide
+		for (int i = 0; i < 4; ++i) {
+			node->child_indices[i] = qtree->size + i;
+		}
+
+		struct Vec2 boundary_center = aabb_get_center(&node->boundary);
+
+		quadtree_node_init(&qtree->nodes[node->child_indices[0]], &(struct AABB){
+			.min = node->boundary.min,
+			.max = boundary_center,
+		});
+		quadtree_node_init(&qtree->nodes[node->child_indices[1]], &(struct AABB){
+			.min = {.x = boundary_center.x, .y = node->boundary.min.y},
+			.max = {.x = node->boundary.max.x, .y = boundary_center.y}
+		});
+		quadtree_node_init(&qtree->nodes[node->child_indices[2]], &(struct AABB){
+			.min = {.x = node->boundary.min.x, .y = boundary_center.y},
+			.max = {.x = boundary_center.x, .y = node->boundary.max.y}
+		});
+		quadtree_node_init(&qtree->nodes[node->child_indices[3]], &(struct AABB){
+			.min = boundary_center,
+			.max = node->boundary.max,
+		});
+		qtree->size += 4;
+	}
+	// add new entity to all children that will accept it (it can be in multiple)
+	// it should always be accepted unless something weird has happened
+	for (int i = 0; i < 4; ++i) {
+		if (quadtree_node_add_range(qtree, node->child_indices[i], range)) return true;
+	}
+	printf("ERROR: Reached unreachable code!\n");
+	return false;
+}
+
+void quadtree_add_ranges(struct QuadTree *qtree, struct AABB *ranges, int range_count) {
+	for (int i = 0; i < range_count; ++i) {
+		quadtree_node_add_range(qtree, 0, &ranges[i]);
+	}
+}
+
+void quadtree_node_ranges_intersecting_range(struct QuadTree *qtree, int index, struct AABB *range, struct AABBArray *range_array) {
+	struct QuadTreeNode *node = &qtree->nodes[index];
+	if (node->entity_count == 0) {
+		return;
+	}
+	if (!aabb_intersects_range(&node->boundary, range)) {
+		return;
+	}
+	for (int i = 0; i < node->entity_count; ++i) {
+		if (range == node->entities[i]) {
+			continue;
+		}
+		if (aabb_intersects_range(range, node->entities[i])) {
+			range_array_push_back(range_array, node->entities[i]);
+		}
+	}
+	if (node->child_indices[0] < 0) {
+		return;
+	}
+	for (int i = 0; i < 4; ++i) {
+		quadtree_node_ranges_intersecting_range(qtree, node->child_indices[i], range, range_array);
+	}
+}
+
+void quadtree_ranges_intersecting_range(struct QuadTree *qtree, struct AABB *range, struct AABBArray *range_array) {
+	quadtree_node_ranges_intersecting_range(qtree, 0, range, range_array);
+}
+
 bool quadtree_node_add_circle(struct QuadTree *qtree, int index, struct Circle *circle) {
 	struct QuadTreeNode *node = &qtree->nodes[index];
 

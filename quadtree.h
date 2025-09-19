@@ -18,9 +18,13 @@ void quadtree_free(struct QuadTree *qtree);
 
 void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, int point_count);
 
+void quadtree_add_ranges(struct QuadTree *qtree, struct AABB *ranges, int range_count);
+
 void quadtree_add_circles(struct QuadTree *qtree, struct Circle *circles, int circle_count);
 
 uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
+
+void quadtree_ranges_intersecting_range(struct QuadTree *qtree, struct AABB *range, struct AABBArray *range_array);
 
 void quadtree_circles_intersecting_circle(struct QuadTree *qtree, struct Circle *circle, struct CircleArray *circle_array);
 

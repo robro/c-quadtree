@@ -4,7 +4,7 @@
 
 #include "util.h"
 
-#define CA_DEFAULT_CAPACITY 2 
+#define ARRAY_DEFAULT_CAPACITY 2
 
 struct timespec timespec_diff(const struct timespec *time_a, const struct timespec *time_b) {
 	struct timespec diff = {
@@ -54,13 +54,41 @@ bool circle_intersects_circle(struct Circle *circle_1, struct Circle *circle_2) 
 	return vec2_length(&difference) < circle_1->radius + circle_2->radius;
 }
 
+bool range_array_init(struct AABBArray *range_array) {
+	struct AABB **array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
+	if (array == NULL) {
+		return false;
+	}
+	range_array->size = 0;
+	range_array->capacity = ARRAY_DEFAULT_CAPACITY;
+	range_array->array = array;
+	return true;
+}
+
+bool range_array_push_back(struct AABBArray *range_array, struct AABB *range) {
+	if (range_array->size == range_array->capacity) {
+		struct AABB **new_array = realloc(range_array->array, sizeof(struct Circle *) * range_array->capacity * 2);
+		if (new_array == NULL) {
+			return false;
+		}
+		range_array->array = new_array;
+		range_array->capacity *= 2;
+	}
+	range_array->array[range_array->size++] = range;
+	return true;
+}
+
+void range_array_clear(struct AABBArray *range_array) {
+	range_array->size = 0;
+}
+
 bool circle_array_init(struct CircleArray *circle_array) {
-	struct Circle **array = malloc(sizeof(array) * CA_DEFAULT_CAPACITY);
+	struct Circle **array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
 	if (array == NULL) {
 		return false;
 	}
 	circle_array->size = 0;
-	circle_array->capacity = CA_DEFAULT_CAPACITY;
+	circle_array->capacity = ARRAY_DEFAULT_CAPACITY;
 	circle_array->array = array;
 	return true;
 }

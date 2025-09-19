@@ -23,6 +23,12 @@ struct Circle {
 	struct Vec2 position;
 };
 
+struct AABBArray {
+	uint size;
+	uint capacity;
+	struct AABB **array;
+};
+
 struct CircleArray {
 	uint size;
 	uint capacity;
@@ -46,6 +52,12 @@ bool circle_array_init(struct CircleArray *circle_array);
 bool circle_array_push_back(struct CircleArray *circle_array, struct Circle *circle);
 
 void circle_array_clear(struct CircleArray *circle_array);
+
+bool range_array_init(struct AABBArray *range_array);
+
+bool range_array_push_back(struct AABBArray *range_array, struct AABB *range);
+
+void range_array_clear(struct AABBArray *range_array);
 
 struct timespec timespec_diff(const struct timespec *time_a, const struct timespec *time_b);
 

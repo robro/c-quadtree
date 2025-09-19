@@ -5,10 +5,10 @@
 #include "util.h"
 
 #define BRUTEFORCE 0
-#define QUADPOINTS 0
+#define QUADRANGES 1
 #define QUADCIRCLE 1
 
-const uint ENTITY_COUNT = 100;
+const uint ENTITY_COUNT = 1000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
 const uint FRAMES = 1;
@@ -36,12 +36,12 @@ int main(void) {
 			.y = (float)rand() / RAND_MAX * HEIGHT
 		};
 		ranges[i] = (struct AABB){
-			.min = {.x = points[i].x, .y = points[i].y},
-			.max = {.x = points[i].x + RANGE_SIZE, .y = points[i].y + RANGE_SIZE}
+			.min = {.x = points[i].x - (float)RANGE_SIZE / 2, .y = points[i].y - (float)RANGE_SIZE / 2},
+			.max = {.x = points[i].x + (float)RANGE_SIZE / 2, .y = points[i].y + (float)RANGE_SIZE / 2}
 		};
 		circles[i] = (struct Circle){
 			.position = {.x = points[i].x, .y = points[i].y},
-			.radius = (float)rand() / RAND_MAX * RANGE_SIZE + 1
+			.radius = (float)RANGE_SIZE / 2
 		};
 	}
 	printf("entity count: %d\n", ENTITY_COUNT);
@@ -66,20 +66,24 @@ int main(void) {
 	printf("overlap count: %d\n", overlap_count);
 #endif
 
-#if QUADPOINTS
+#if QUADRANGES
 	// for every point use quadtree to check for overlap (FAST!)
+	struct AABBArray overlapping_ranges = {};
+	range_array_init(&overlapping_ranges);
+
 	for (i = 0; i < FRAMES; ++i) {
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
+		quadtree_add_ranges(qtree, ranges, ENTITY_COUNT);
 		overlap_count = 0;
-		// clock_gettime(CLOCK_MONOTONIC, &start_time);
-		quadtree_clear(qtree);
-		quadtree_add_points(qtree, points, ENTITY_COUNT);
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			overlap_count += quadtree_points_in_range(qtree, &ranges[j]);
+			quadtree_ranges_intersecting_range(qtree, &ranges[j], &overlapping_ranges);
+			overlap_count += overlapping_ranges.size;
+			range_array_clear(&overlapping_ranges);
 		}
-		// clock_gettime(CLOCK_MONOTONIC, &end_time);
-		// work_time = timespec_diff(&end_time, &start_time);
-		// printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
-		printf("overlap count: %d\n", overlap_count);
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		work_time = timespec_diff(&end_time, &start_time);
+		printf("overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
+		quadtree_clear(qtree);
 	}
 #endif
 
@@ -89,33 +93,33 @@ int main(void) {
 	circle_array_init(&overlapping_circles);
 
 	for (i = 0; i < FRAMES; ++i) {
-		// clock_gettime(CLOCK_MONOTONIC, &start_time);
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
 		quadtree_add_circles(qtree, circles, ENTITY_COUNT);
-		printf("Added circles to quadtree\n");
+		overlap_count = 0;
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			printf(
-				"orig circle: x= %f, y= %f, r= %f\n",
-				circles[j].position.x,
-				circles[j].position.y,
-				circles[j].radius
-			);
+			// printf(
+			// 	"orig circle: x= %f, y= %f, r= %f\n",
+			// 	circles[j].position.x,
+			// 	circles[j].position.y,
+			// 	circles[j].radius
+			// );
 			quadtree_circles_intersecting_circle(qtree, &circles[j], &overlapping_circles);
-			for (k = 0; k < overlapping_circles.size; ++k) {
-				printf(
-					"overlapping: x= %f, y= %f, r= %f\n",
-					overlapping_circles.array[k]->position.x,
-					overlapping_circles.array[k]->position.y,
-					overlapping_circles.array[k]->radius
-				);
-			}
-			printf("overlapping circles: %d\n", overlapping_circles.size);
+			// for (k = 0; k < overlapping_circles.size; ++k) {
+			// 	printf(
+			// 		"overlapping: x= %f, y= %f, r= %f\n",
+			// 		overlapping_circles.array[k]->position.x,
+			// 		overlapping_circles.array[k]->position.y,
+			// 		overlapping_circles.array[k]->radius
+			// 	);
+			// }
+			// printf("overlapping circles: %d\n", overlapping_circles.size);
+			overlap_count += overlapping_circles.size;
 			circle_array_clear(&overlapping_circles);
 		}
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		work_time = timespec_diff(&end_time, &start_time);
+		printf("overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 		quadtree_clear(qtree);
-		// clock_gettime(CLOCK_MONOTONIC, &end_time);
-		// work_time = timespec_diff(&end_time, &start_time);
-		// printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
-		// printf("overlap count: %d\n", overlap_count);
 	}
 #endif
 
