@@ -1,12 +1,16 @@
-#include "quadtree.h"
+#include <stdlib.h>
 #include <stdio.h>
 
-#define BRUTEFORCE 0
+#include "quadtree.h"
 
-const uint TOTAL_POINTS = 10000;
+#define BRUTEFORCE 1
+#define QUADPOINTS 1
+#define QUADCIRCLE 1
+
+const uint ENTITY_COUNT = 1000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
-const uint FRAMES = 10;
+const uint FRAMES = 1;
 const uint RANGE_SIZE = 5;
 
 int main(void) {
@@ -20,53 +24,80 @@ int main(void) {
 	}
 
 	srand(time(NULL));
-	struct Vec2 points[TOTAL_POINTS];
-	struct AABB ranges[TOTAL_POINTS];
+	struct Vec2 points[ENTITY_COUNT];
+	struct AABB ranges[ENTITY_COUNT];
+	struct Circle circles[ENTITY_COUNT];
 	int i, j;
 
-	for (i = 0; i < TOTAL_POINTS; ++i) {
+	for (i = 0; i < ENTITY_COUNT; ++i) {
 		points[i] = (struct Vec2){
 			.x = (float)rand() / RAND_MAX * WIDTH,
 			.y = (float)rand() / RAND_MAX * HEIGHT
 		};
 		ranges[i] = (struct AABB){
-			.min = {.x = points[j].x, .y = points[j].y},
-			.max = {.x = points[j].x + RANGE_SIZE, .y = points[j].y + RANGE_SIZE}
+			.min = {.x = points[i].x, .y = points[i].y},
+			.max = {.x = points[i].x + RANGE_SIZE, .y = points[i].y + RANGE_SIZE}
+		};
+		circles[i] = (struct Circle){
+			.position = {.x = points[i].x, .y = points[i].y},
+			.radius = (float)rand() / RAND_MAX * RANGE_SIZE + 1
 		};
 	}
-	printf("point count: %d\n", TOTAL_POINTS);
+	printf("entity count: %d\n", ENTITY_COUNT);
 
 	struct timespec start_time;
 	struct timespec end_time;
 	struct timespec work_time;
+	uint overlap_count = 0;
 
 #if BRUTEFORCE
 	// for every point check a range against every other point (SLOW!)
-	clock_gettime(CLOCK_MONOTONIC, &start_time);
-	for (i = 0; i < TOTAL_POINTS; ++i) {
-		for (j = 0; j < TOTAL_POINTS; ++j) {
-			aabb_contains_point(&ranges[i], &points[j]);
+	overlap_count = 0;
+	// clock_gettime(CLOCK_MONOTONIC, &start_time);
+	for (i = 0; i < ENTITY_COUNT; ++i) {
+		for (j = 0; j < ENTITY_COUNT; ++j) {
+			overlap_count += aabb_contains_point(&ranges[i], &points[j]);
 		}
 	}
-	clock_gettime(CLOCK_MONOTONIC, &end_time);
-	work_time = timespec_diff(&end_time, &start_time);
-	printf("bruteforce time: %f secs\n", timespec_to_secs(&work_time));
+	// clock_gettime(CLOCK_MONOTONIC, &end_time);
+	// work_time = timespec_diff(&end_time, &start_time);
+	// printf("bruteforce time: %f secs\n", timespec_to_secs(&work_time));
+	printf("overlap count: %d\n", overlap_count);
 #endif
 
+#if QUADPOINTS
 	// for every point use quadtree to check for overlap (FAST!)
 	for (i = 0; i < FRAMES; ++i) {
-		clock_gettime(CLOCK_MONOTONIC, &start_time);
+		overlap_count = 0;
+		// clock_gettime(CLOCK_MONOTONIC, &start_time);
 		quadtree_clear(qtree);
-		quadtree_add_points(qtree, points, TOTAL_POINTS);
-		for (j = 0; j < TOTAL_POINTS; ++j) {
-			quadtree_points_in_range(qtree, &ranges[i]);
+		quadtree_add_points(qtree, points, ENTITY_COUNT);
+		for (j = 0; j < ENTITY_COUNT; ++j) {
+			overlap_count += quadtree_points_in_range(qtree, &ranges[j]);
 		}
-		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		work_time = timespec_diff(&end_time, &start_time);
-		// printf("node capacity: %d points\n", QT_NODE_CAPACITY);
-		// printf("node count: %d\n", qtree->node_count);
-		printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
+		// clock_gettime(CLOCK_MONOTONIC, &end_time);
+		// work_time = timespec_diff(&end_time, &start_time);
+		// printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
+		printf("overlap count: %d\n", overlap_count);
 	}
+#endif
+
+#if QUADCIRCLE
+	// for every circle use quadtree to check for overlap (FAST!)
+	for (i = 0; i < FRAMES; ++i) {
+		overlap_count = 0;
+		// clock_gettime(CLOCK_MONOTONIC, &start_time);
+		quadtree_clear(qtree);
+		quadtree_add_circles(qtree, circles, ENTITY_COUNT);
+		for (j = 0; j < ENTITY_COUNT; ++j) {
+			overlap_count += quadtree_circles_intersecting_circle(qtree, &circles[j]);
+		}
+		// clock_gettime(CLOCK_MONOTONIC, &end_time);
+		// work_time = timespec_diff(&end_time, &start_time);
+		// printf("quadtree time: %f secs\n", timespec_to_secs(&work_time));
+		printf("overlap count: %d\n", overlap_count);
+	}
+#endif
 
 	quadtree_free(qtree);
 	return 0;
