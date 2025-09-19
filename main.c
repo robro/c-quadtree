@@ -80,10 +80,10 @@ int main(void) {
 			overlap_count += overlapping_ranges.size;
 			range_array_clear(&overlapping_ranges);
 		}
+		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
 		printf("range overlap count:  %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
-		quadtree_clear(qtree);
 	}
 #endif
 
@@ -116,10 +116,10 @@ int main(void) {
 			overlap_count += overlapping_circles.size;
 			circle_array_clear(&overlapping_circles);
 		}
+		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
 		printf("circle overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
-		quadtree_clear(qtree);
 	}
 #endif
 
