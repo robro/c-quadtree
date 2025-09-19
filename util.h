@@ -45,6 +45,8 @@ bool circle_array_init(struct CircleArray *circle_array);
 
 bool circle_array_push_back(struct CircleArray *circle_array, struct Circle *circle);
 
+void circle_array_clear(struct CircleArray *circle_array);
+
 struct timespec timespec_diff(const struct timespec *time_a, const struct timespec *time_b);
 
 float timespec_to_secs(const struct timespec *time);

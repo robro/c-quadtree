@@ -22,6 +22,6 @@ void quadtree_add_circles(struct QuadTree *qtree, struct Circle *circles, int ci
 
 uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
 
-struct Circle **quadtree_circles_intersecting_circle(struct QuadTree *qtree, struct Circle *circle);
+void quadtree_circles_intersecting_circle(struct QuadTree *qtree, struct Circle *circle, struct CircleArray *circle_array);
 
 #endif
