@@ -12,7 +12,7 @@ const uint ENTITY_COUNT = 1000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
 const uint FRAMES = 1;
-const uint RANGE_SIZE = 5;
+const uint RADIUS = 5;
 
 int main(void) {
 	struct QuadTree *qtree = quadtree_new(&(struct AABB){
@@ -36,12 +36,12 @@ int main(void) {
 			.y = (float)rand() / RAND_MAX * HEIGHT
 		};
 		ranges[i] = (struct AABB){
-			.min = {.x = points[i].x - (float)RANGE_SIZE / 2, .y = points[i].y - (float)RANGE_SIZE / 2},
-			.max = {.x = points[i].x + (float)RANGE_SIZE / 2, .y = points[i].y + (float)RANGE_SIZE / 2}
+			.min = {.x = points[i].x - RADIUS, .y = points[i].y - RADIUS},
+			.max = {.x = points[i].x + RADIUS, .y = points[i].y + RADIUS}
 		};
 		circles[i] = (struct Circle){
 			.position = {.x = points[i].x, .y = points[i].y},
-			.radius = (float)RANGE_SIZE / 2
+			.radius = RADIUS
 		};
 	}
 	printf("entity count: %d\n", ENTITY_COUNT);
@@ -82,7 +82,7 @@ int main(void) {
 		}
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
-		printf("overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
+		printf("range overlap count:  %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 		quadtree_clear(qtree);
 	}
 #endif
@@ -118,7 +118,7 @@ int main(void) {
 		}
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
-		printf("overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
+		printf("circle overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 		quadtree_clear(qtree);
 	}
 #endif
