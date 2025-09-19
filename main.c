@@ -28,7 +28,7 @@ int main(void) {
 	struct Vec2 points[ENTITY_COUNT];
 	struct AABB ranges[ENTITY_COUNT];
 	struct Circle circles[ENTITY_COUNT];
-	int i, j;
+	int i, j, k;
 
 	for (i = 0; i < ENTITY_COUNT; ++i) {
 		points[i] = (struct Vec2){
@@ -93,10 +93,20 @@ int main(void) {
 		quadtree_add_circles(qtree, circles, ENTITY_COUNT);
 		printf("Added circles to quadtree\n");
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			printf("orig circle: x= %f, y= %f, r= %f\n", circles[j].position.x, circles[j].position.y, circles[j].radius);
+			printf(
+				"orig circle: x= %f, y= %f, r= %f\n",
+				circles[j].position.x,
+				circles[j].position.y,
+				circles[j].radius
+			);
 			quadtree_circles_intersecting_circle(qtree, &circles[j], &overlapping_circles);
-			for (int k = 0; k < overlapping_circles.size; ++k) {
-				printf("overlapping: x= %f, y= %f, r= %f\n", overlapping_circles.array[k]->position.x, overlapping_circles.array[k]->position.y, overlapping_circles.array[k]->radius);
+			for (k = 0; k < overlapping_circles.size; ++k) {
+				printf(
+					"overlapping: x= %f, y= %f, r= %f\n",
+					overlapping_circles.array[k]->position.x,
+					overlapping_circles.array[k]->position.y,
+					overlapping_circles.array[k]->radius
+				);
 			}
 			printf("overlapping circles: %d\n", overlapping_circles.size);
 			circle_array_clear(&overlapping_circles);
