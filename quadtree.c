@@ -118,7 +118,6 @@ bool quadtree_node_add_point(struct QuadTree *qtree, int index, struct Vec2 *poi
 }
 
 void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, int point_count) {
-	assert(point_count >= 0);
 	for (int i = 0; i < point_count; ++i) {
 		quadtree_node_add_point(qtree, 0, &points[i]);
 	}
@@ -210,7 +209,6 @@ bool quadtree_node_add_circle(struct QuadTree *qtree, int index, struct Circle *
 }
 
 void quadtree_add_circles(struct QuadTree *qtree, struct Circle *circles, int circle_count) {
-	assert(circle_count >= 0);
 	for (int i = 0; i < circle_count; ++i) {
 		quadtree_node_add_circle(qtree, 0, &circles[i]);
 	}
