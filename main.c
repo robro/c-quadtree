@@ -4,9 +4,9 @@
 #include "quadtree.h"
 #include "util.h"
 
-#define QUADPOINTS 1
-#define QUADRANGES 1
-#define QUADCIRCLE 1
+#define PNTS_BENCH 1
+#define RECT_BENCH 1
+#define CIRC_BENCH 1
 
 const uint ENTITY_COUNT = 10000;
 const uint WIDTH = 100;
@@ -51,7 +51,7 @@ int main(void) {
 	timespec work_time;
 	uint overlap_count;
 
-#if QUADPOINTS
+#if PNTS_BENCH
 	PointArray overlapping_points = {};
 	point_array_init(&overlapping_points);
 
@@ -71,7 +71,7 @@ int main(void) {
 	}
 #endif
 
-#if QUADRANGES
+#if RECT_BENCH
 	RectArray overlapping_rects = {};
 	rect_array_init(&overlapping_rects);
 
@@ -91,7 +91,7 @@ int main(void) {
 	}
 #endif
 
-#if QUADCIRCLE
+#if CIRC_BENCH
 	CircleArray overlapping_circles = {};
 	circle_array_init(&overlapping_circles);
 
