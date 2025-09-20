@@ -328,12 +328,12 @@ void quadtree_node_circles_intersecting_circle(QuadTree *qtree, int index, Circl
 	}
 }
 
-void quadtree_points_intersecting_rect(QuadTree *qtree, Rect *range, PointArray *results) {
-	quadtree_node_points_intersecting_rect(qtree, 0, range, results);
+void quadtree_points_intersecting_rect(QuadTree *qtree, Rect *rect, PointArray *results) {
+	quadtree_node_points_intersecting_rect(qtree, 0, rect, results);
 }
 
-void quadtree_rects_intersecting_rect(QuadTree *qtree, Rect *range, RectArray *results) {
-	quadtree_node_rects_intersecting_rect(qtree, 0, range, results);
+void quadtree_rects_intersecting_rect(QuadTree *qtree, Rect *rect, RectArray *results) {
+	quadtree_node_rects_intersecting_rect(qtree, 0, rect, results);
 }
 
 /*
