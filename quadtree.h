@@ -1,11 +1,6 @@
 #ifndef QUADTREE_H
 #define QUADTREE_H
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
 #include "util.h"
 
 typedef struct QuadTree QuadTree;

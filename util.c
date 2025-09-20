@@ -1,15 +1,14 @@
 #include <math.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 #include "util.h"
 
 #define ARRAY_DEFAULT_CAPACITY 2
 
-struct timespec timespec_diff(const timespec *t1, const timespec *t2) {
+struct timespec timespec_diff(const timespec *time1, const timespec *time2) {
 	timespec diff = {
-		.tv_sec = t1->tv_sec - t2->tv_sec,
-		.tv_nsec = t1->tv_nsec - t2->tv_nsec,
+		.tv_sec = time1->tv_sec - time2->tv_sec,
+		.tv_nsec = time1->tv_nsec - time2->tv_nsec,
 	};
 	if (diff.tv_nsec < 0) {
 		diff.tv_nsec += NSECS_IN_SEC;
@@ -22,36 +21,20 @@ float timespec_to_secs(const timespec *time) {
 	return time->tv_sec + (float)time->tv_nsec / NSECS_IN_SEC;
 }
 
-void free_multiple(void **array, uint size) {
-	for (int i = 0; i < size; ++i) {
-		free(array[i]);
-		array[i] = NULL;
-	}
-}
-
 float clamp_float(float value, float min, float max) {
 	const float v = (value < min) ? min : value;
 	return (v > max) ? max : v;
 }
 
-float vec2_length(Vec2 *v) {
-	return sqrt(v->x * v->x + v->y * v->y);
+float vec2_length(Vec2 *vec) {
+	return sqrt(vec->x * vec->x + vec->y * vec->y);
 }
 
-bool rect_intersects_point(Rect *rect, Vec2 *point) {
-	if (point->x < rect->min.x || point->x >= rect->max.x ||
-		point->y < rect->min.y || point->y >= rect->max.y) {
-		return false;
-	}
-	return true;
-}
-
-bool circle_intersects_circle(Circle *c1, Circle *c2) {
-	Vec2 difference = {
-		.x = c1->position.x - c2->position.x,
-		.y = c1->position.y - c2->position.y,
+Vec2 rect_get_center(Rect *rect) {
+	return (Vec2){
+		.x = rect->min.x + (rect->max.x - rect->min.x) / 2,
+		.y = rect->min.y + (rect->max.y - rect->min.y) / 2,
 	};
-	return vec2_length(&difference) < c1->radius + c2->radius;
 }
 
 typedef struct {
@@ -160,10 +143,19 @@ bool rect_intersects_rect(Rect *r1, Rect *r2) {
 	return true;
 }
 
-Vec2 rect_get_center(Rect *rect) {
-	return (Vec2){
-		.x = rect->min.x + (rect->max.x - rect->min.x) / 2,
-		.y = rect->min.y + (rect->max.y - rect->min.y) / 2,
+bool rect_intersects_point(Rect *rect, Vec2 *point) {
+	if (point->x < rect->min.x || point->x >= rect->max.x ||
+		point->y < rect->min.y || point->y >= rect->max.y) {
+		return false;
+	}
+	return true;
+}
+
+bool circle_intersects_circle(Circle *circle1, Circle *circle2) {
+	Vec2 difference = {
+		.x = circle1->position.x - circle2->position.x,
+		.y = circle1->position.y - circle2->position.y,
 	};
+	return vec2_length(&difference) < circle1->radius + circle2->radius;
 }
 

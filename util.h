@@ -1,14 +1,12 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <sys/types.h>
-#include <time.h>
+#include <stdbool.h>
 
 #define NSECS_IN_SEC 1000000000
 
-#define array_size(array) (sizeof(array) / sizeof(*array))
-
 typedef struct timespec timespec;
+typedef unsigned int uint;
 
 typedef struct {
 	float x;
@@ -43,17 +41,15 @@ typedef struct {
 	Circle **array;
 } CircleArray;
 
-#define VEC_ZERO (Vec2){0, 0}
-
 Vec2 rect_get_center(Rect *rect);
 
 bool rect_intersects_point(Rect *rect, Vec2 *point);
 
-bool rect_intersects_rect(Rect *r1, Rect *r2);
+bool rect_intersects_rect(Rect *rect1, Rect *rect2);
 
 bool rect_intersects_circle(Rect *rect, Circle *circle);
 
-bool circle_intersects_circle(Circle *c1, Circle *c2);
+bool circle_intersects_circle(Circle *circle1, Circle *circle2);
 
 bool point_array_init(PointArray *point_array);
 
@@ -73,10 +69,8 @@ bool rect_array_push_back(RectArray *rect_array, Rect *rect);
 
 void rect_array_clear(RectArray *rect_array);
 
-timespec timespec_diff(const timespec *t1, const timespec *t2);
+timespec timespec_diff(const timespec *time1, const timespec *time2);
 
 float timespec_to_secs(const timespec *time);
-
-void free_multiple(void **array, uint size);
 
 #endif
