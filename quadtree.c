@@ -73,10 +73,10 @@ bool _circle_intersects_circle(void *circle1, void *circle2) {
 	return circle_intersects_circle(circle1, circle2);
 }
 
-bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, IntersectsFunc func) {
+bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, IntersectsFunc intersects_node) {
 	QuadTreeNode *node = &qtree->nodes[index];
 
-	if (!func(&node->boundary, shape)) {
+	if (!intersects_node(&node->boundary, shape)) {
 		return false;
 	}
 	if (node->entity_count < QT_NODE_CAPACITY && node->child_indices[0] < 0) {
@@ -129,7 +129,7 @@ bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, Intersects
 	// add new entity to whichever child will accept it
 	// it should always be accepted unless something weird has happened
 	for (int i = 0; i < 4; ++i) {
-		if (quadtree_node_add_shape(qtree, node->child_indices[i], shape, func)) return true;
+		if (quadtree_node_add_shape(qtree, node->child_indices[i], shape, intersects_node)) return true;
 	}
 	printf("ERROR: Reached unreachable code!\n");
 	return false;
