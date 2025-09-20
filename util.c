@@ -54,88 +54,77 @@ bool circle_intersects_circle(Circle *c1, Circle *c2) {
 	return vec2_length(&difference) < c1->radius + c2->radius;
 }
 
-bool point_array_init(PointArray *point_array) {
-	Vec2 **array = malloc(sizeof(*array) * ARRAY_DEFAULT_CAPACITY);
-	if (array == NULL) {
+typedef struct {
+	uint size;
+	uint capacity;
+	void **array;
+} VoidArray;
+
+bool void_array_init(void *array) {
+	void **new_array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
+	if (new_array == NULL) {
 		return false;
 	}
-	point_array->size = 0;
-	point_array->capacity = ARRAY_DEFAULT_CAPACITY;
-	point_array->array = array;
+	VoidArray *void_array = array;
+	void_array->size = 0;
+	void_array->capacity = ARRAY_DEFAULT_CAPACITY;
+	void_array->array = new_array;
 	return true;
+}
+
+bool void_array_push_back(void *array, void *value) {
+	VoidArray *void_array = array;
+	if (void_array->size == void_array->capacity) {
+		void **new_array = realloc(void_array->array, sizeof(void *) * void_array->capacity * 2);
+		if (new_array == NULL) {
+			return false;
+		}
+		void_array->array = new_array;
+		void_array->capacity *= 2;
+	}
+	void_array->array[void_array->size++] = value;
+	return true;
+}
+
+void void_array_clear(void *array) {
+	VoidArray *void_array = array;
+	void_array->size = 0;
+}
+
+bool point_array_init(PointArray *point_array) {
+	return void_array_init(point_array);
 }
 
 bool point_array_push_back(PointArray *point_array, Vec2 *point) {
-	if (point_array->size == point_array->capacity) {
-		Vec2 **array = realloc(point_array->array, sizeof(*array) * point_array->capacity * 2);
-		if (array == NULL) {
-			return false;
-		}
-		point_array->array = array;
-		point_array->capacity *= 2;
-	}
-	point_array->array[point_array->size++] = point;
-	return true;
+	return void_array_push_back(point_array, point);
 }
 
 void point_array_clear(PointArray *point_array) {
-	point_array->size = 0;
+	void_array_clear(point_array);
 }
 
 bool rect_array_init(RectArray *rect_array) {
-	Rect **array = malloc(sizeof(*array) * ARRAY_DEFAULT_CAPACITY);
-	if (array == NULL) {
-		return false;
-	}
-	rect_array->size = 0;
-	rect_array->capacity = ARRAY_DEFAULT_CAPACITY;
-	rect_array->array = array;
-	return true;
+	return void_array_init(rect_array);
 }
 
 bool rect_array_push_back(RectArray *rect_array, Rect *rect) {
-	if (rect_array->size == rect_array->capacity) {
-		Rect **array = realloc(rect_array->array, sizeof(*array) * rect_array->capacity * 2);
-		if (array == NULL) {
-			return false;
-		}
-		rect_array->array = array;
-		rect_array->capacity *= 2;
-	}
-	rect_array->array[rect_array->size++] = rect;
-	return true;
+	return void_array_push_back(rect_array, rect);
 }
 
 void rect_array_clear(RectArray *rect_array) {
-	rect_array->size = 0;
+	void_array_clear(rect_array);
 }
 
 bool circle_array_init(CircleArray *circle_array) {
-	Circle **array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
-	if (array == NULL) {
-		return false;
-	}
-	circle_array->size = 0;
-	circle_array->capacity = ARRAY_DEFAULT_CAPACITY;
-	circle_array->array = array;
-	return true;
+	return void_array_init(circle_array);
 }
 
 bool circle_array_push_back(CircleArray *circle_array, Circle *circle) {
-	if (circle_array->size == circle_array->capacity) {
-		Circle **array = realloc(circle_array->array, sizeof(*array) * circle_array->capacity * 2);
-		if (array == NULL) {
-			return false;
-		}
-		circle_array->array = array;
-		circle_array->capacity *= 2;
-	}
-	circle_array->array[circle_array->size++] = circle;
-	return true;
+	return void_array_push_back(circle_array, circle);
 }
 
 void circle_array_clear(CircleArray *circle_array) {
-	circle_array->size = 0;
+	void_array_clear(circle_array);
 }
 
 bool rect_intersects_circle(Rect *rect, Circle *circle) {
