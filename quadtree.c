@@ -259,7 +259,7 @@ void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count) {
 	}
 }
 
-void quadtree_node_points_in_range(QuadTree *qtree, int index, Range2 *range, PointArray *point_array) {
+void quadtree_node_points_in_range(QuadTree *qtree, int index, Range2 *range, PointArray *results) {
 	QuadTreeNode *node = &qtree->nodes[index];
 	if (node->entity_count == 0) {
 		return;
@@ -269,18 +269,18 @@ void quadtree_node_points_in_range(QuadTree *qtree, int index, Range2 *range, Po
 	}
 	for (int i = 0; i < node->entity_count; ++i) {
 		if (range_contains_point(range, node->entities[i])) {
-			point_array_push_back(point_array, node->entities[i]);
+			point_array_push_back(results, node->entities[i]);
 		}
 	}
 	if (node->child_indices[0] < 0) {
 		return;
 	}
 	for (int i = 0; i < 4; ++i) {
-		quadtree_node_points_in_range(qtree, node->child_indices[i], range, point_array);
+		quadtree_node_points_in_range(qtree, node->child_indices[i], range, results);
 	}
 }
 
-void quadtree_node_ranges_intersecting_range(QuadTree *qtree, int index, Range2 *range, Range2Array *range_array) {
+void quadtree_node_ranges_intersecting_range(QuadTree *qtree, int index, Range2 *range, Range2Array *results) {
 	QuadTreeNode *node = &qtree->nodes[index];
 	if (node->entity_count == 0) {
 		return;
@@ -293,18 +293,18 @@ void quadtree_node_ranges_intersecting_range(QuadTree *qtree, int index, Range2 
 			continue;
 		}
 		if (range_intersects_range(range, node->entities[i])) {
-			range_array_push_back(range_array, node->entities[i]);
+			range_array_push_back(results, node->entities[i]);
 		}
 	}
 	if (node->child_indices[0] < 0) {
 		return;
 	}
 	for (int i = 0; i < 4; ++i) {
-		quadtree_node_ranges_intersecting_range(qtree, node->child_indices[i], range, range_array);
+		quadtree_node_ranges_intersecting_range(qtree, node->child_indices[i], range, results);
 	}
 }
 
-void quadtree_node_circles_intersecting_circle(QuadTree *qtree, int index, Circle *circle, CircleArray *circle_array) {
+void quadtree_node_circles_intersecting_circle(QuadTree *qtree, int index, Circle *circle, CircleArray *results) {
 	QuadTreeNode *node = &qtree->nodes[index];
 	if (node->entity_count == 0) {
 		return;
@@ -317,29 +317,29 @@ void quadtree_node_circles_intersecting_circle(QuadTree *qtree, int index, Circl
 			continue;
 		}
 		if (circle_intersects_circle(circle, node->entities[i])) {
-			circle_array_push_back(circle_array, node->entities[i]);
+			circle_array_push_back(results, node->entities[i]);
 		}
 	}
 	if (node->child_indices[0] < 0) {
 		return;
 	}
 	for (int i = 0; i < 4; ++i) {
-		quadtree_node_circles_intersecting_circle(qtree, node->child_indices[i], circle, circle_array);
+		quadtree_node_circles_intersecting_circle(qtree, node->child_indices[i], circle, results);
 	}
 }
 
-void quadtree_points_in_range(QuadTree *qtree, Range2 *range, PointArray *point_array) {
-	quadtree_node_points_in_range(qtree, 0, range, point_array);
+void quadtree_points_in_range(QuadTree *qtree, Range2 *range, PointArray *results) {
+	quadtree_node_points_in_range(qtree, 0, range, results);
 }
 
-void quadtree_ranges_intersecting_range(QuadTree *qtree, Range2 *range, Range2Array *range_array) {
-	quadtree_node_ranges_intersecting_range(qtree, 0, range, range_array);
+void quadtree_ranges_intersecting_range(QuadTree *qtree, Range2 *range, Range2Array *results) {
+	quadtree_node_ranges_intersecting_range(qtree, 0, range, results);
 }
 
 /*
  * Finds Circles in QuadTree overlapping input Circle and returns result in CircleArray.
  */
-void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, CircleArray *circle_array) {
-	quadtree_node_circles_intersecting_circle(qtree, 0, circle, circle_array);
+void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, CircleArray *results) {
+	quadtree_node_circles_intersecting_circle(qtree, 0, circle, results);
 }
 
