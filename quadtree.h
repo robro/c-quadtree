@@ -15,12 +15,18 @@ void quadtree_add_points(QuadTree *qtree, Vec2 *points, int point_count);
 
 void quadtree_add_rects(QuadTree *qtree, Rect *rects, int rect_count);
 
+void quadtree_add_circle(QuadTree *qtree, Circle *circle);
+
 void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count);
 
-void quadtree_points_intersecting_rect(QuadTree *qtree, Rect *rect, PointArray *point_array);
+void quadtree_add_entities_circle(QuadTree *qtree, EntityCircle *entities_circle, int count);
 
-void quadtree_rects_intersecting_rect(QuadTree *qtree, Rect *rect, RectArray *rect_array);
+void quadtree_points_intersecting_rect(QuadTree *qtree, Rect *rect, PointArray *results);
 
-void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, CircleArray *circle_array);
+void quadtree_rects_intersecting_rect(QuadTree *qtree, Rect *rect, RectArray *results);
+
+void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, CircleArray *results);
+
+void quadtree_entities_circle_intersecting_entity_circle(QuadTree *qtree, EntityCircle *entity_circle, EntityCircleArray *results);
 
 #endif

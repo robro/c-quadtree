@@ -41,73 +41,85 @@ typedef struct {
 	uint size;
 	uint capacity;
 	void **array;
-} VoidArray;
+} DynamicArray;
 
-static inline bool void_array_init(void *array) {
+bool dynamic_array_init(void *array) {
 	void **new_array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
 	if (new_array == NULL) {
 		return false;
 	}
-	VoidArray *void_array = array;
-	void_array->size = 0;
-	void_array->capacity = ARRAY_DEFAULT_CAPACITY;
-	void_array->array = new_array;
+	DynamicArray *dynamic_array = array;
+	dynamic_array->size = 0;
+	dynamic_array->capacity = ARRAY_DEFAULT_CAPACITY;
+	dynamic_array->array = new_array;
 	return true;
 }
 
-static inline bool void_array_push_back(void *array, void *value) {
-	VoidArray *void_array = array;
-	if (void_array->size == void_array->capacity) {
-		void **new_array = realloc(void_array->array, sizeof(void *) * void_array->capacity * 2);
+bool dynamic_array_push_back(void *array, void *value) {
+	DynamicArray *dynamic_array = array;
+	if (dynamic_array->size == dynamic_array->capacity) {
+		void **new_array = realloc(dynamic_array->array, sizeof(void *) * dynamic_array->capacity * 2);
 		if (new_array == NULL) {
 			return false;
 		}
-		void_array->array = new_array;
-		void_array->capacity *= 2;
+		dynamic_array->array = new_array;
+		dynamic_array->capacity *= 2;
 	}
-	void_array->array[void_array->size++] = value;
+	dynamic_array->array[dynamic_array->size++] = value;
 	return true;
 }
 
-static inline void void_array_clear(void *array) {
-	VoidArray *void_array = array;
-	void_array->size = 0;
+void dynamic_array_clear(void *array) {
+	DynamicArray *dynamic_array = array;
+	dynamic_array->size = 0;
 }
 
 bool point_array_init(PointArray *point_array) {
-	return void_array_init(point_array);
+	return dynamic_array_init(point_array);
 }
 
 bool point_array_push_back(PointArray *point_array, Vec2 *point) {
-	return void_array_push_back(point_array, point);
+	return dynamic_array_push_back(point_array, point);
 }
 
 void point_array_clear(PointArray *point_array) {
-	void_array_clear(point_array);
+	dynamic_array_clear(point_array);
 }
 
 bool rect_array_init(RectArray *rect_array) {
-	return void_array_init(rect_array);
+	return dynamic_array_init(rect_array);
 }
 
 bool rect_array_push_back(RectArray *rect_array, Rect *rect) {
-	return void_array_push_back(rect_array, rect);
+	return dynamic_array_push_back(rect_array, rect);
 }
 
 void rect_array_clear(RectArray *rect_array) {
-	void_array_clear(rect_array);
+	dynamic_array_clear(rect_array);
 }
 
 bool circle_array_init(CircleArray *circle_array) {
-	return void_array_init(circle_array);
+	return dynamic_array_init(circle_array);
 }
 
 bool circle_array_push_back(CircleArray *circle_array, Circle *circle) {
-	return void_array_push_back(circle_array, circle);
+	return dynamic_array_push_back(circle_array, circle);
 }
 
 void circle_array_clear(CircleArray *circle_array) {
-	void_array_clear(circle_array);
+	dynamic_array_clear(circle_array);
+}
+
+bool entity_circle_array_init(EntityCircleArray *circle_array) {
+	return dynamic_array_init(circle_array);
+}
+
+bool entity_circle_array_push_back(EntityCircleArray *circle_array, EntityCircle *circle) {
+	return dynamic_array_push_back(circle_array, circle);
+}
+
+void entity_circle_array_clear(EntityCircleArray *circle_array) {
+	dynamic_array_clear(circle_array);
 }
 
 bool rect_intersects_circle(Rect *rect, Circle *circle) {
@@ -159,3 +171,10 @@ bool circle_intersects_circle(Circle *circle1, Circle *circle2) {
 	return vec2_length(&difference) < circle1->radius + circle2->radius;
 }
 
+bool rect_intersects_entity_circle(Rect *rect, EntityCircle *entity_circle) {
+	return rect_intersects_circle(rect, &entity_circle->shape);
+}
+
+bool entity_circle_intersects_entity_circle(EntityCircle *entity_circle_1, EntityCircle *entity_circle_2) {
+	return circle_intersects_circle(&entity_circle_1->shape, &entity_circle_2->shape);
+}

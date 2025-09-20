@@ -73,17 +73,25 @@ bool _circle_intersects_circle(void *circle1, void *circle2) {
 	return circle_intersects_circle(circle1, circle2);
 }
 
-bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, IntersectsFunc intersects_node) {
+bool _rect_intersects_entity_circle(void *rect, void *entity_circle) {
+	return rect_intersects_entity_circle(rect, entity_circle);
+}
+
+bool _entity_circle_intersects_entity_circle(void *entity_circle_1, void *entity_circle_2) {
+	return entity_circle_intersects_entity_circle(entity_circle_1, entity_circle_2);
+}
+
+bool quadtree_node_add_entity(QuadTree *qtree, int index, void *entity, IntersectsFunc intersects_node) {
 	QuadTreeNode *node = &qtree->nodes[index];
 
-	if (!intersects_node(&node->boundary, shape)) {
+	if (!intersects_node(&node->boundary, entity)) {
 		return false;
 	}
 	if (node->entity_count < QT_NODE_CAPACITY) {
 		// we have room for more entities and no children yet
 		// assume if any child indices are invalid they all are
 		// so just add the entity here and increment entity count
-		node->entities[node->entity_count++] = shape;
+		node->entities[node->entity_count++] = entity;
 		return true;
 	}
 	if (node->child_indices[0] < 0 && qtree->size > qtree->capacity - 4) {
@@ -129,27 +137,37 @@ bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, Intersects
 	// add new entity to whichever child will accept it
 	// it should always be accepted unless something weird has happened
 	for (int i = 0; i < 4; ++i) {
-		if (quadtree_node_add_shape(qtree, node->child_indices[i], shape, intersects_node)) return true;
+		if (quadtree_node_add_entity(qtree, node->child_indices[i], entity, intersects_node)) return true;
 	}
 	printf("ERROR: Reached unreachable code!\n");
 	return false;
 }
 
-void quadtree_add_points(QuadTree *qtree, Vec2 *points, int point_count) {
-	for (int i = 0; i < point_count; ++i) {
-		quadtree_node_add_shape(qtree, 0, &points[i], _rect_intersects_point);
+void quadtree_add_points(QuadTree *qtree, Vec2 *points, int count) {
+	for (int i = 0; i < count; ++i) {
+		quadtree_node_add_entity(qtree, 0, &points[i], _rect_intersects_point);
 	}
 }
 
-void quadtree_add_rects(QuadTree *qtree, Rect *rects, int rect_count) {
-	for (int i = 0; i < rect_count; ++i) {
-		quadtree_node_add_shape(qtree, 0, &rects[i], _rect_intersects_rect);
+void quadtree_add_rects(QuadTree *qtree, Rect *rects, int count) {
+	for (int i = 0; i < count; ++i) {
+		quadtree_node_add_entity(qtree, 0, &rects[i], _rect_intersects_rect);
 	}
 }
 
-void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count) {
-	for (int i = 0; i < circle_count; ++i) {
-		quadtree_node_add_shape(qtree, 0, &circles[i], _rect_intersects_circle);
+void quadtree_add_circle(QuadTree *qtree, Circle *circle) {
+	quadtree_node_add_entity(qtree, 0, circle, _rect_intersects_circle);
+}
+
+void quadtree_add_circles(QuadTree *qtree, Circle *circles, int count) {
+	for (int i = 0; i < count; ++i) {
+		quadtree_node_add_entity(qtree, 0, &circles[i], _rect_intersects_circle);
+	}
+}
+
+void quadtree_add_entities_circle(QuadTree *qtree, EntityCircle *entities_circle, int count) {
+	for (int i = 0; i < count; ++i) {
+		quadtree_node_add_entity(qtree, 0, &entities_circle[i], _rect_intersects_entity_circle);
 	}
 }
 
@@ -167,16 +185,20 @@ void _circle_array_push_back(void *array, void *circle) {
 	circle_array_push_back(array, circle);
 }
 
-void quadtree_node_shapes_intersecting_shape(QuadTree *qtree, int index, void *shape, void *results, IntersectsFunc intersects_node, IntersectsFunc intersects_shape, PushBackFunc push_back) {
+void _entity_circle_array_push_back(void *array, void *entity_circle) {
+	entity_circle_array_push_back(array, entity_circle);
+}
+
+void quadtree_node_entities_intersecting_entity(QuadTree *qtree, int index, void *entity, void *results, IntersectsFunc intersects_node, IntersectsFunc intersects_entity, PushBackFunc push_back) {
 	QuadTreeNode *node = &qtree->nodes[index];
 	if (node->entity_count == 0) {
 		return;
 	}
-	if (!intersects_node(&node->boundary, shape)) {
+	if (!intersects_node(&node->boundary, entity)) {
 		return;
 	}
 	for (int i = 0; i < node->entity_count; ++i) {
-		if (intersects_shape(shape, node->entities[i])) {
+		if (intersects_entity(entity, node->entities[i])) {
 			push_back(results, node->entities[i]);
 		}
 	}
@@ -184,18 +206,22 @@ void quadtree_node_shapes_intersecting_shape(QuadTree *qtree, int index, void *s
 		return;
 	}
 	for (int i = 0; i < 4; ++i) {
-		quadtree_node_shapes_intersecting_shape(qtree, node->child_indices[i], shape, results, intersects_node, intersects_shape, push_back);
+		quadtree_node_entities_intersecting_entity(qtree, node->child_indices[i], entity, results, intersects_node, intersects_entity, push_back);
 	}
 }
 
 void quadtree_points_intersecting_rect(QuadTree *qtree, Rect *rect, PointArray *results) {
-	quadtree_node_shapes_intersecting_shape(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_point, _point_array_push_back);
+	quadtree_node_entities_intersecting_entity(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_point, _point_array_push_back);
 }
 
 void quadtree_rects_intersecting_rect(QuadTree *qtree, Rect *rect, RectArray *results) {
-	quadtree_node_shapes_intersecting_shape(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_rect, _rect_array_push_back);
+	quadtree_node_entities_intersecting_entity(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_rect, _rect_array_push_back);
 }
 
 void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, CircleArray *results) {
-	quadtree_node_shapes_intersecting_shape(qtree, 0, circle, results, _rect_intersects_circle, _circle_intersects_circle, _circle_array_push_back);
+	quadtree_node_entities_intersecting_entity(qtree, 0, circle, results, _rect_intersects_circle, _circle_intersects_circle, _circle_array_push_back);
+}
+
+void quadtree_entities_circle_intersecting_entity_circle(QuadTree *qtree, EntityCircle *entity_circle, EntityCircleArray *results) {
+	quadtree_node_entities_intersecting_entity(qtree, 0, entity_circle, results, _rect_intersects_entity_circle, _entity_circle_intersects_entity_circle, _entity_circle_array_push_back);
 }
