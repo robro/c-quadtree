@@ -55,7 +55,7 @@ void quadtree_free(QuadTree *qtree) {
 	free(qtree);
 }
 
-typedef bool ShapeIntersectsShapeFunc(void *, void *);
+typedef bool IntersectsFunc(void *, void *);
 
 bool _rect_intersects_point(void *rect, void *point) {
 	return rect_intersects_point(rect, point);
@@ -73,7 +73,7 @@ bool _circle_intersects_circle(void *circle1, void *circle2) {
 	return circle_intersects_circle(circle1, circle2);
 }
 
-bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, ShapeIntersectsShapeFunc func) {
+bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, IntersectsFunc func) {
 	QuadTreeNode *node = &qtree->nodes[index];
 
 	if (!func(&node->boundary, shape)) {
@@ -153,7 +153,7 @@ void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count) {
 	}
 }
 
-typedef void ShapeArrayPushBackFunc(void *, void *);
+typedef void PushBackFunc(void *, void *);
 
 void _point_array_push_back(void *array, void *point) {
 	point_array_push_back(array, point);
@@ -167,24 +167,24 @@ void _circle_array_push_back(void *array, void *circle) {
 	circle_array_push_back(array, circle);
 }
 
-void quadtree_node_shapes_intersecting_shape(QuadTree *qtree, int index, void *shape, void *results, ShapeIntersectsShapeFunc func1, ShapeIntersectsShapeFunc func2, ShapeArrayPushBackFunc func3) {
+void quadtree_node_shapes_intersecting_shape(QuadTree *qtree, int index, void *shape, void *results, IntersectsFunc intersects_node, IntersectsFunc intersects_shape, PushBackFunc push_back) {
 	QuadTreeNode *node = &qtree->nodes[index];
 	if (node->entity_count == 0) {
 		return;
 	}
-	if (!func1(&node->boundary, shape)) {
+	if (!intersects_node(&node->boundary, shape)) {
 		return;
 	}
 	for (int i = 0; i < node->entity_count; ++i) {
-		if (func2(shape, node->entities[i])) {
-			func3(results, node->entities[i]);
+		if (intersects_shape(shape, node->entities[i])) {
+			push_back(results, node->entities[i]);
 		}
 	}
 	if (node->child_indices[0] < 0) {
 		return;
 	}
 	for (int i = 0; i < 4; ++i) {
-		quadtree_node_shapes_intersecting_shape(qtree, node->child_indices[i], shape, results, func1, func2, func3);
+		quadtree_node_shapes_intersecting_shape(qtree, node->child_indices[i], shape, results, intersects_node, intersects_shape, push_back);
 	}
 }
 
