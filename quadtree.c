@@ -79,7 +79,7 @@ bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, Intersects
 	if (!intersects_node(&node->boundary, shape)) {
 		return false;
 	}
-	if (node->entity_count < QT_NODE_CAPACITY && node->child_indices[0] < 0) {
+	if (node->entity_count < QT_NODE_CAPACITY) {
 		// we have room for more entities and no children yet
 		// assume if any child indices are invalid they all are
 		// so just add the entity here and increment entity count
@@ -97,7 +97,7 @@ bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, Intersects
 		}
 		qtree->nodes = new_nodes;
 		qtree->capacity *= 2;
-		node = &qtree->nodes[index];
+		node = &new_nodes[index];
 		printf("QuadTree node capacity doubled to: %d nodes\n", qtree->capacity);
 	}
 	if (node->child_indices[0] < 0) {
