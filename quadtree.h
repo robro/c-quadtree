@@ -22,7 +22,7 @@ void quadtree_add_ranges(QuadTree *qtree, Range2 *ranges, int range_count);
 
 void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count);
 
-uint quadtree_points_in_range(QuadTree *qtree, Range2 *range);
+void quadtree_points_in_range(QuadTree *qtree, Range2 *range, PointArray *point_array);
 
 void quadtree_ranges_intersecting_range(QuadTree *qtree, Range2 *range, Range2Array *range_array);
 

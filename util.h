@@ -28,6 +28,12 @@ typedef struct {
 typedef struct {
 	uint size;
 	uint capacity;
+	Vec2 **array;
+} PointArray;
+
+typedef struct {
+	uint size;
+	uint capacity;
 	Range2 **array;
 } Range2Array;
 
@@ -48,6 +54,12 @@ bool range_intersects_range(Range2 *r1, Range2 *r2);
 bool range_intersects_circle(Range2 *range, Circle *circle);
 
 bool circle_intersects_circle(Circle *circle_a, Circle *circle_b);
+
+bool point_array_init(PointArray *point_array);
+
+bool point_array_push_back(PointArray *point_array, Vec2 *point);
+
+void point_array_clear(PointArray *point_array);
 
 bool circle_array_init(CircleArray *circle_array);
 

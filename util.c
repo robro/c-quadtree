@@ -54,6 +54,34 @@ bool circle_intersects_circle(Circle *c1, Circle *c2) {
 	return vec2_length(&difference) < c1->radius + c2->radius;
 }
 
+bool point_array_init(PointArray *point_array) {
+	Vec2 **array = malloc(sizeof(*array) * ARRAY_DEFAULT_CAPACITY);
+	if (array == NULL) {
+		return false;
+	}
+	point_array->size = 0;
+	point_array->capacity = ARRAY_DEFAULT_CAPACITY;
+	point_array->array = array;
+	return true;
+}
+
+bool point_array_push_back(PointArray *point_array, Vec2 *point) {
+	if (point_array->size == point_array->capacity) {
+		Vec2 **array = realloc(point_array->array, sizeof(*array) * point_array->capacity * 2);
+		if (array == NULL) {
+			return false;
+		}
+		point_array->array = array;
+		point_array->capacity *= 2;
+	}
+	point_array->array[point_array->size++] = point;
+	return true;
+}
+
+void point_array_clear(PointArray *point_array) {
+	point_array->size = 0;
+}
+
 bool range_array_init(Range2Array *range_array) {
 	Range2 **array = malloc(sizeof(*array) * ARRAY_DEFAULT_CAPACITY);
 	if (array == NULL) {
@@ -67,11 +95,11 @@ bool range_array_init(Range2Array *range_array) {
 
 bool range_array_push_back(Range2Array *range_array, Range2 *range) {
 	if (range_array->size == range_array->capacity) {
-		Range2 **new_array = realloc(range_array->array, sizeof(*new_array) * range_array->capacity * 2);
-		if (new_array == NULL) {
+		Range2 **array = realloc(range_array->array, sizeof(*array) * range_array->capacity * 2);
+		if (array == NULL) {
 			return false;
 		}
-		range_array->array = new_array;
+		range_array->array = array;
 		range_array->capacity *= 2;
 	}
 	range_array->array[range_array->size++] = range;
@@ -95,11 +123,11 @@ bool circle_array_init(CircleArray *circle_array) {
 
 bool circle_array_push_back(CircleArray *circle_array, Circle *circle) {
 	if (circle_array->size == circle_array->capacity) {
-		Circle **new_array = realloc(circle_array->array, sizeof(*new_array) * circle_array->capacity * 2);
-		if (new_array == NULL) {
+		Circle **array = realloc(circle_array->array, sizeof(*array) * circle_array->capacity * 2);
+		if (array == NULL) {
 			return false;
 		}
-		circle_array->array = new_array;
+		circle_array->array = array;
 		circle_array->capacity *= 2;
 	}
 	circle_array->array[circle_array->size++] = circle;

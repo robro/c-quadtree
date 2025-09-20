@@ -4,14 +4,14 @@
 #include "quadtree.h"
 #include "util.h"
 
-#define BRUTEFORCE 1
+#define QUADPOINTS 1
 #define QUADRANGES 1
 #define QUADCIRCLE 1
 
-const uint ENTITY_COUNT = 1000;
+const uint ENTITY_COUNT = 10000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
-const uint FRAMES = 1;
+const uint FRAMES = 5;
 const uint RADIUS = 5;
 
 int main(void) {
@@ -49,21 +49,27 @@ int main(void) {
 	timespec start_time;
 	timespec end_time;
 	timespec work_time;
-	uint overlap_count = 0;
+	uint overlap_count;
 
-#if BRUTEFORCE
+#if QUADPOINTS
 	// for every point check a range against every other point (SLOW!)
-	overlap_count = 0;
-	// clock_gettime(CLOCK_MONOTONIC, &start_time);
-	for (i = 0; i < ENTITY_COUNT; ++i) {
+	PointArray overlapping_points = {};
+	point_array_init(&overlapping_points);
+
+	for (i = 0; i < FRAMES; ++i) {
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
+		quadtree_add_points(qtree, points, ENTITY_COUNT);
+		overlap_count = 0;
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			overlap_count += range_contains_point(&ranges[i], &points[j]);
+			quadtree_points_in_range(qtree, &ranges[j], &overlapping_points);
+			overlap_count += overlapping_points.size;
+			point_array_clear(&overlapping_points);
 		}
+		quadtree_clear(qtree);
+		clock_gettime(CLOCK_MONOTONIC, &end_time);
+		work_time = timespec_diff(&end_time, &start_time);
+		printf("point overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 	}
-	// clock_gettime(CLOCK_MONOTONIC, &end_time);
-	// work_time = timespec_diff(&end_time, &start_time);
-	// printf("bruteforce time: %f secs\n", timespec_to_secs(&work_time));
-	printf("overlap count: %d\n", overlap_count);
 #endif
 
 #if QUADRANGES
@@ -83,7 +89,7 @@ int main(void) {
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
-		printf("range overlap count:  %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
+		printf("range overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 	}
 #endif
 
