@@ -8,24 +8,24 @@
 
 #include "util.h"
 
-struct QuadTree;
+typedef struct QuadTree QuadTree;
 
-struct QuadTree* quadtree_new(struct AABB *boundary);
+QuadTree* quadtree_new(Range2 *boundary);
 
-void quadtree_clear(struct QuadTree *qtree);
+void quadtree_clear(QuadTree *qtree);
 
-void quadtree_free(struct QuadTree *qtree);
+void quadtree_free(QuadTree *qtree);
 
-void quadtree_add_points(struct QuadTree *qtree, struct Vec2 *points, int point_count);
+void quadtree_add_points(QuadTree *qtree, Vec2 *points, int point_count);
 
-void quadtree_add_ranges(struct QuadTree *qtree, struct AABB *ranges, int range_count);
+void quadtree_add_ranges(QuadTree *qtree, Range2 *ranges, int range_count);
 
-void quadtree_add_circles(struct QuadTree *qtree, struct Circle *circles, int circle_count);
+void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count);
 
-uint quadtree_points_in_range(struct QuadTree *qtree, struct AABB *range);
+uint quadtree_points_in_range(QuadTree *qtree, Range2 *range);
 
-void quadtree_ranges_intersecting_range(struct QuadTree *qtree, struct AABB *range, struct AABBArray *range_array);
+void quadtree_ranges_intersecting_range(QuadTree *qtree, Range2 *range, Range2Array *range_array);
 
-void quadtree_circles_intersecting_circle(struct QuadTree *qtree, struct Circle *circle, struct CircleArray *circle_array);
+void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, CircleArray *circle_array);
 
 #endif

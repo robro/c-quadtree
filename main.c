@@ -4,7 +4,7 @@
 #include "quadtree.h"
 #include "util.h"
 
-#define BRUTEFORCE 0
+#define BRUTEFORCE 1
 #define QUADRANGES 1
 #define QUADCIRCLE 1
 
@@ -15,7 +15,7 @@ const uint FRAMES = 1;
 const uint RADIUS = 5;
 
 int main(void) {
-	struct QuadTree *qtree = quadtree_new(&(struct AABB){
+	QuadTree *qtree = quadtree_new(&(Range2){
 		.min = {.x = 0, .y = 0},
 		.max = {.x = WIDTH, .y = HEIGHT},
 	});
@@ -25,30 +25,30 @@ int main(void) {
 	}
 
 	srand(0);
-	struct Vec2 points[ENTITY_COUNT];
-	struct AABB ranges[ENTITY_COUNT];
-	struct Circle circles[ENTITY_COUNT];
+	Vec2 points[ENTITY_COUNT];
+	Range2 ranges[ENTITY_COUNT];
+	Circle circles[ENTITY_COUNT];
 	int i, j, k;
 
 	for (i = 0; i < ENTITY_COUNT; ++i) {
-		points[i] = (struct Vec2){
+		points[i] = (Vec2){
 			.x = (float)rand() / RAND_MAX * WIDTH,
 			.y = (float)rand() / RAND_MAX * HEIGHT
 		};
-		ranges[i] = (struct AABB){
+		ranges[i] = (Range2){
 			.min = {.x = points[i].x - RADIUS, .y = points[i].y - RADIUS},
 			.max = {.x = points[i].x + RADIUS, .y = points[i].y + RADIUS}
 		};
-		circles[i] = (struct Circle){
+		circles[i] = (Circle){
 			.position = {.x = points[i].x, .y = points[i].y},
 			.radius = RADIUS
 		};
 	}
 	printf("entity count: %d\n", ENTITY_COUNT);
 
-	struct timespec start_time;
-	struct timespec end_time;
-	struct timespec work_time;
+	timespec start_time;
+	timespec end_time;
+	timespec work_time;
 	uint overlap_count = 0;
 
 #if BRUTEFORCE
@@ -57,7 +57,7 @@ int main(void) {
 	// clock_gettime(CLOCK_MONOTONIC, &start_time);
 	for (i = 0; i < ENTITY_COUNT; ++i) {
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			overlap_count += aabb_contains_point(&ranges[i], &points[j]);
+			overlap_count += range_contains_point(&ranges[i], &points[j]);
 		}
 	}
 	// clock_gettime(CLOCK_MONOTONIC, &end_time);
@@ -68,7 +68,7 @@ int main(void) {
 
 #if QUADRANGES
 	// for every point use quadtree to check for overlap (FAST!)
-	struct AABBArray overlapping_ranges = {};
+	Range2Array overlapping_ranges = {};
 	range_array_init(&overlapping_ranges);
 
 	for (i = 0; i < FRAMES; ++i) {
@@ -89,7 +89,7 @@ int main(void) {
 
 #if QUADCIRCLE
 	// for every circle use quadtree to check for overlap (FAST!)
-	struct CircleArray overlapping_circles = {};
+	CircleArray overlapping_circles = {};
 	circle_array_init(&overlapping_circles);
 
 	for (i = 0; i < FRAMES; ++i) {

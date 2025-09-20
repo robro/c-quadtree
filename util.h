@@ -8,60 +8,62 @@
 
 #define array_size(array) (sizeof(array) / sizeof(*array))
 
-struct Vec2 {
+typedef struct timespec timespec;
+
+typedef struct {
 	float x;
 	float y;
-};
+} Vec2;
 
-struct AABB {
-	struct Vec2 min;
-	struct Vec2 max;
-};
+typedef struct {
+	Vec2 min;
+	Vec2 max;
+} Range2;
 
-struct Circle {
+typedef struct {
 	float radius;
-	struct Vec2 position;
-};
+	Vec2 position;
+} Circle;
 
-struct AABBArray {
+typedef struct {
 	uint size;
 	uint capacity;
-	struct AABB **array;
-};
+	Range2 **array;
+} Range2Array;
 
-struct CircleArray {
+typedef struct {
 	uint size;
 	uint capacity;
-	struct Circle **array;
-};
+	Circle **array;
+} CircleArray;
 
-#define VEC_ZERO (struct Vec2){0, 0}
+#define VEC_ZERO (Vec2){0, 0}
 
-bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point);
+Vec2 range_get_center(Range2 *range);
 
-bool aabb_intersects_range(struct AABB *boundary, struct AABB *range);
+bool range_contains_point(Range2 *range, Vec2 *point);
 
-bool aabb_intersects_circle(struct AABB *boundary, struct Circle *circle);
+bool range_intersects_range(Range2 *r1, Range2 *r2);
 
-struct Vec2 aabb_get_center(struct AABB *boundary);
+bool range_intersects_circle(Range2 *range, Circle *circle);
 
-bool circle_intersects_circle(struct Circle *circle_1, struct Circle *circle_2);
+bool circle_intersects_circle(Circle *circle_a, Circle *circle_b);
 
-bool circle_array_init(struct CircleArray *circle_array);
+bool circle_array_init(CircleArray *circle_array);
 
-bool circle_array_push_back(struct CircleArray *circle_array, struct Circle *circle);
+bool circle_array_push_back(CircleArray *circle_array, Circle *circle);
 
-void circle_array_clear(struct CircleArray *circle_array);
+void circle_array_clear(CircleArray *circle_array);
 
-bool range_array_init(struct AABBArray *range_array);
+bool range_array_init(Range2Array *range_array);
 
-bool range_array_push_back(struct AABBArray *range_array, struct AABB *range);
+bool range_array_push_back(Range2Array *range_array, Range2 *range);
 
-void range_array_clear(struct AABBArray *range_array);
+void range_array_clear(Range2Array *range_array);
 
-struct timespec timespec_diff(const struct timespec *time_a, const struct timespec *time_b);
+timespec timespec_diff(const timespec *t1, const timespec *t2);
 
-float timespec_to_secs(const struct timespec *time);
+float timespec_to_secs(const timespec *time);
 
 void free_multiple(void **array, uint size);
 

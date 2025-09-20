@@ -6,10 +6,10 @@
 
 #define ARRAY_DEFAULT_CAPACITY 2
 
-struct timespec timespec_diff(const struct timespec *time_a, const struct timespec *time_b) {
-	struct timespec diff = {
-		.tv_sec = time_a->tv_sec - time_b->tv_sec,
-		.tv_nsec = time_a->tv_nsec - time_b->tv_nsec,
+struct timespec timespec_diff(const timespec *t1, const timespec *t2) {
+	timespec diff = {
+		.tv_sec = t1->tv_sec - t2->tv_sec,
+		.tv_nsec = t1->tv_nsec - t2->tv_nsec,
 	};
 	if (diff.tv_nsec < 0) {
 		diff.tv_nsec += NSECS_IN_SEC;
@@ -18,7 +18,7 @@ struct timespec timespec_diff(const struct timespec *time_a, const struct timesp
 	return diff;
 }
 
-float timespec_to_secs(const struct timespec *time) {
+float timespec_to_secs(const timespec *time) {
 	return time->tv_sec + (float)time->tv_nsec / NSECS_IN_SEC;
 }
 
@@ -29,33 +29,33 @@ void free_multiple(void **array, uint size) {
 	}
 }
 
-bool aabb_contains_point(struct AABB *boundary, struct Vec2 *point) {
-	if (point->x < boundary->min.x || point->x >= boundary->max.x ||
-		point->y < boundary->min.y || point->y >= boundary->max.y) {
-		return false;
-	}
-	return true;
-}
-
 float clamp_float(float value, float min, float max) {
 	const float v = (value < min) ? min : value;
 	return (v > max) ? max : v;
 }
 
-float vec2_length(struct Vec2 *v) {
+float vec2_length(Vec2 *v) {
 	return sqrt(v->x * v->x + v->y * v->y);
 }
 
-bool circle_intersects_circle(struct Circle *circle_1, struct Circle *circle_2) {
-	struct Vec2 difference = {
-		.x = circle_1->position.x - circle_2->position.x,
-		.y = circle_1->position.y - circle_2->position.y,
-	};
-	return vec2_length(&difference) < circle_1->radius + circle_2->radius;
+bool range_contains_point(Range2 *range, Vec2 *point) {
+	if (point->x < range->min.x || point->x >= range->max.x ||
+		point->y < range->min.y || point->y >= range->max.y) {
+		return false;
+	}
+	return true;
 }
 
-bool range_array_init(struct AABBArray *range_array) {
-	struct AABB **array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
+bool circle_intersects_circle(Circle *c1, Circle *c2) {
+	Vec2 difference = {
+		.x = c1->position.x - c2->position.x,
+		.y = c1->position.y - c2->position.y,
+	};
+	return vec2_length(&difference) < c1->radius + c2->radius;
+}
+
+bool range_array_init(Range2Array *range_array) {
+	Range2 **array = malloc(sizeof(*array) * ARRAY_DEFAULT_CAPACITY);
 	if (array == NULL) {
 		return false;
 	}
@@ -65,9 +65,9 @@ bool range_array_init(struct AABBArray *range_array) {
 	return true;
 }
 
-bool range_array_push_back(struct AABBArray *range_array, struct AABB *range) {
+bool range_array_push_back(Range2Array *range_array, Range2 *range) {
 	if (range_array->size == range_array->capacity) {
-		struct AABB **new_array = realloc(range_array->array, sizeof(struct Circle *) * range_array->capacity * 2);
+		Range2 **new_array = realloc(range_array->array, sizeof(*new_array) * range_array->capacity * 2);
 		if (new_array == NULL) {
 			return false;
 		}
@@ -78,12 +78,12 @@ bool range_array_push_back(struct AABBArray *range_array, struct AABB *range) {
 	return true;
 }
 
-void range_array_clear(struct AABBArray *range_array) {
+void range_array_clear(Range2Array *range_array) {
 	range_array->size = 0;
 }
 
-bool circle_array_init(struct CircleArray *circle_array) {
-	struct Circle **array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
+bool circle_array_init(CircleArray *circle_array) {
+	Circle **array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
 	if (array == NULL) {
 		return false;
 	}
@@ -93,9 +93,9 @@ bool circle_array_init(struct CircleArray *circle_array) {
 	return true;
 }
 
-bool circle_array_push_back(struct CircleArray *circle_array, struct Circle *circle) {
+bool circle_array_push_back(CircleArray *circle_array, Circle *circle) {
 	if (circle_array->size == circle_array->capacity) {
-		struct Circle **new_array = realloc(circle_array->array, sizeof(struct Circle *) * circle_array->capacity * 2);
+		Circle **new_array = realloc(circle_array->array, sizeof(*new_array) * circle_array->capacity * 2);
 		if (new_array == NULL) {
 			return false;
 		}
@@ -106,47 +106,47 @@ bool circle_array_push_back(struct CircleArray *circle_array, struct Circle *cir
 	return true;
 }
 
-void circle_array_clear(struct CircleArray *circle_array) {
+void circle_array_clear(CircleArray *circle_array) {
 	circle_array->size = 0;
 }
 
-bool aabb_intersects_circle(struct AABB *boundary, struct Circle *circle) {
-	struct Vec2 boundary_center = aabb_get_center(boundary);
-	struct Vec2 difference = {
-		.x = circle->position.x - boundary_center.x,
-		.y = circle->position.y - boundary_center.y
+bool range_intersects_circle(Range2 *range, Circle *circle) {
+	Vec2 range_center = range_get_center(range);
+	Vec2 difference = {
+		.x = circle->position.x - range_center.x,
+		.y = circle->position.y - range_center.y
 	};
-	struct Vec2 clamped = {
+	Vec2 clamped = {
 		.x = clamp_float(difference.x,
-			-((boundary->max.x - boundary->min.x) / 2),
-			 ((boundary->max.x - boundary->min.x) / 2)),
+			-((range->max.x - range->min.x) / 2),
+			 ((range->max.x - range->min.x) / 2)),
 		.y = clamp_float(difference.y,
-			-((boundary->max.y - boundary->min.y) / 2),
-			 ((boundary->max.y - boundary->min.y) / 2))
+			-((range->max.y - range->min.y) / 2),
+			 ((range->max.y - range->min.y) / 2))
 	};
-	struct Vec2 closest = {
-		.x = boundary_center.x + clamped.x,
-		.y = boundary_center.y + clamped.y
+	Vec2 closest = {
+		.x = range_center.x + clamped.x,
+		.y = range_center.y + clamped.y
 	};
-	difference = (struct Vec2){
+	difference = (Vec2){
 		.x = closest.x - circle->position.x,
 		.y = closest.y - circle->position.y
 	};
 	return vec2_length(&difference) < circle->radius;
 }
 
-bool aabb_intersects_range(struct AABB *boundary, struct AABB *range) {
-	if (boundary->max.x < range->min.x || boundary->min.x >= range->max.x ||
-		boundary->max.y < range->min.y || boundary->min.y >= range->max.y) {
+bool range_intersects_range(Range2 *r1, Range2 *r2) {
+	if (r1->max.x < r2->min.x || r1->min.x >= r2->max.x ||
+		r1->max.y < r2->min.y || r1->min.y >= r2->max.y) {
 		return false;
 	};
 	return true;
 }
 
-struct Vec2 aabb_get_center(struct AABB *boundary) {
-	return (struct Vec2){
-		.x = boundary->min.x + (boundary->max.x - boundary->min.x) / 2,
-		.y = boundary->min.y + (boundary->max.y - boundary->min.y) / 2,
+Vec2 range_get_center(Range2 *range) {
+	return (Vec2){
+		.x = range->min.x + (range->max.x - range->min.x) / 2,
+		.y = range->min.y + (range->max.y - range->min.y) / 2,
 	};
 }
 
