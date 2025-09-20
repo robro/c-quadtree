@@ -12,10 +12,10 @@ const uint ENTITY_COUNT = 10000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
 const uint FRAMES = 5;
-const uint RADIUS = 5;
+const float RADIUS = 2.5;
 
 int main(void) {
-	QuadTree *qtree = quadtree_new(&(Range2){
+	QuadTree *qtree = quadtree_new(&(Rect){
 		.min = {.x = 0, .y = 0},
 		.max = {.x = WIDTH, .y = HEIGHT},
 	});
@@ -26,7 +26,7 @@ int main(void) {
 
 	srand(0);
 	Vec2 points[ENTITY_COUNT];
-	Range2 ranges[ENTITY_COUNT];
+	Rect rects[ENTITY_COUNT];
 	Circle circles[ENTITY_COUNT];
 	int i, j, k;
 
@@ -35,7 +35,7 @@ int main(void) {
 			.x = (float)rand() / RAND_MAX * WIDTH,
 			.y = (float)rand() / RAND_MAX * HEIGHT
 		};
-		ranges[i] = (Range2){
+		rects[i] = (Rect){
 			.min = {.x = points[i].x - RADIUS, .y = points[i].y - RADIUS},
 			.max = {.x = points[i].x + RADIUS, .y = points[i].y + RADIUS}
 		};
@@ -52,7 +52,6 @@ int main(void) {
 	uint overlap_count;
 
 #if QUADPOINTS
-	// for every point check a range against every other point (SLOW!)
 	PointArray overlapping_points = {};
 	point_array_init(&overlapping_points);
 
@@ -61,7 +60,7 @@ int main(void) {
 		quadtree_add_points(qtree, points, ENTITY_COUNT);
 		overlap_count = 0;
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			quadtree_points_in_range(qtree, &ranges[j], &overlapping_points);
+			quadtree_points_intersecting_rect(qtree, &rects[j], &overlapping_points);
 			overlap_count += overlapping_points.size;
 			point_array_clear(&overlapping_points);
 		}
@@ -73,18 +72,17 @@ int main(void) {
 #endif
 
 #if QUADRANGES
-	// for every point use quadtree to check for overlap (FAST!)
-	Range2Array overlapping_ranges = {};
-	range_array_init(&overlapping_ranges);
+	RectArray overlapping_rects = {};
+	rect_array_init(&overlapping_rects);
 
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
-		quadtree_add_ranges(qtree, ranges, ENTITY_COUNT);
+		quadtree_add_rects(qtree, rects, ENTITY_COUNT);
 		overlap_count = 0;
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			quadtree_ranges_intersecting_range(qtree, &ranges[j], &overlapping_ranges);
-			overlap_count += overlapping_ranges.size;
-			range_array_clear(&overlapping_ranges);
+			quadtree_rects_intersecting_rect(qtree, &rects[j], &overlapping_rects);
+			overlap_count += overlapping_rects.size;
+			rect_array_clear(&overlapping_rects);
 		}
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
@@ -94,7 +92,6 @@ int main(void) {
 #endif
 
 #if QUADCIRCLE
-	// for every circle use quadtree to check for overlap (FAST!)
 	CircleArray overlapping_circles = {};
 	circle_array_init(&overlapping_circles);
 
@@ -103,22 +100,7 @@ int main(void) {
 		quadtree_add_circles(qtree, circles, ENTITY_COUNT);
 		overlap_count = 0;
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			// printf(
-			// 	"orig circle: x= %f, y= %f, r= %f\n",
-			// 	circles[j].position.x,
-			// 	circles[j].position.y,
-			// 	circles[j].radius
-			// );
 			quadtree_circles_intersecting_circle(qtree, &circles[j], &overlapping_circles);
-			// for (k = 0; k < overlapping_circles.size; ++k) {
-			// 	printf(
-			// 		"overlapping: x= %f, y= %f, r= %f\n",
-			// 		overlapping_circles.array[k]->position.x,
-			// 		overlapping_circles.array[k]->position.y,
-			// 		overlapping_circles.array[k]->radius
-			// 	);
-			// }
-			// printf("overlapping circles: %d\n", overlapping_circles.size);
 			overlap_count += overlapping_circles.size;
 			circle_array_clear(&overlapping_circles);
 		}

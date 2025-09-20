@@ -38,9 +38,9 @@ float vec2_length(Vec2 *v) {
 	return sqrt(v->x * v->x + v->y * v->y);
 }
 
-bool range_contains_point(Range2 *range, Vec2 *point) {
-	if (point->x < range->min.x || point->x >= range->max.x ||
-		point->y < range->min.y || point->y >= range->max.y) {
+bool rect_intersects_point(Rect *rect, Vec2 *point) {
+	if (point->x < rect->min.x || point->x >= rect->max.x ||
+		point->y < rect->min.y || point->y >= rect->max.y) {
 		return false;
 	}
 	return true;
@@ -82,32 +82,32 @@ void point_array_clear(PointArray *point_array) {
 	point_array->size = 0;
 }
 
-bool range_array_init(Range2Array *range_array) {
-	Range2 **array = malloc(sizeof(*array) * ARRAY_DEFAULT_CAPACITY);
+bool rect_array_init(RectArray *rect_array) {
+	Rect **array = malloc(sizeof(*array) * ARRAY_DEFAULT_CAPACITY);
 	if (array == NULL) {
 		return false;
 	}
-	range_array->size = 0;
-	range_array->capacity = ARRAY_DEFAULT_CAPACITY;
-	range_array->array = array;
+	rect_array->size = 0;
+	rect_array->capacity = ARRAY_DEFAULT_CAPACITY;
+	rect_array->array = array;
 	return true;
 }
 
-bool range_array_push_back(Range2Array *range_array, Range2 *range) {
-	if (range_array->size == range_array->capacity) {
-		Range2 **array = realloc(range_array->array, sizeof(*array) * range_array->capacity * 2);
+bool rect_array_push_back(RectArray *rect_array, Rect *rect) {
+	if (rect_array->size == rect_array->capacity) {
+		Rect **array = realloc(rect_array->array, sizeof(*array) * rect_array->capacity * 2);
 		if (array == NULL) {
 			return false;
 		}
-		range_array->array = array;
-		range_array->capacity *= 2;
+		rect_array->array = array;
+		rect_array->capacity *= 2;
 	}
-	range_array->array[range_array->size++] = range;
+	rect_array->array[rect_array->size++] = rect;
 	return true;
 }
 
-void range_array_clear(Range2Array *range_array) {
-	range_array->size = 0;
+void rect_array_clear(RectArray *rect_array) {
+	rect_array->size = 0;
 }
 
 bool circle_array_init(CircleArray *circle_array) {
@@ -138,23 +138,23 @@ void circle_array_clear(CircleArray *circle_array) {
 	circle_array->size = 0;
 }
 
-bool range_intersects_circle(Range2 *range, Circle *circle) {
-	Vec2 range_center = range_get_center(range);
+bool rect_intersects_circle(Rect *rect, Circle *circle) {
+	Vec2 rect_center = rect_get_center(rect);
 	Vec2 difference = {
-		.x = circle->position.x - range_center.x,
-		.y = circle->position.y - range_center.y
+		.x = circle->position.x - rect_center.x,
+		.y = circle->position.y - rect_center.y
 	};
 	Vec2 clamped = {
 		.x = clamp_float(difference.x,
-			-((range->max.x - range->min.x) / 2),
-			 ((range->max.x - range->min.x) / 2)),
+			-((rect->max.x - rect->min.x) / 2),
+			 ((rect->max.x - rect->min.x) / 2)),
 		.y = clamp_float(difference.y,
-			-((range->max.y - range->min.y) / 2),
-			 ((range->max.y - range->min.y) / 2))
+			-((rect->max.y - rect->min.y) / 2),
+			 ((rect->max.y - rect->min.y) / 2))
 	};
 	Vec2 closest = {
-		.x = range_center.x + clamped.x,
-		.y = range_center.y + clamped.y
+		.x = rect_center.x + clamped.x,
+		.y = rect_center.y + clamped.y
 	};
 	difference = (Vec2){
 		.x = closest.x - circle->position.x,
@@ -163,7 +163,7 @@ bool range_intersects_circle(Range2 *range, Circle *circle) {
 	return vec2_length(&difference) < circle->radius;
 }
 
-bool range_intersects_range(Range2 *r1, Range2 *r2) {
+bool rect_intersects_rect(Rect *r1, Rect *r2) {
 	if (r1->max.x < r2->min.x || r1->min.x >= r2->max.x ||
 		r1->max.y < r2->min.y || r1->min.y >= r2->max.y) {
 		return false;
@@ -171,10 +171,10 @@ bool range_intersects_range(Range2 *r1, Range2 *r2) {
 	return true;
 }
 
-Vec2 range_get_center(Range2 *range) {
+Vec2 rect_get_center(Rect *rect) {
 	return (Vec2){
-		.x = range->min.x + (range->max.x - range->min.x) / 2,
-		.y = range->min.y + (range->max.y - range->min.y) / 2,
+		.x = rect->min.x + (rect->max.x - rect->min.x) / 2,
+		.y = rect->min.y + (rect->max.y - rect->min.y) / 2,
 	};
 }
 

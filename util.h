@@ -18,7 +18,7 @@ typedef struct {
 typedef struct {
 	Vec2 min;
 	Vec2 max;
-} Range2;
+} Rect;
 
 typedef struct {
 	float radius;
@@ -34,8 +34,8 @@ typedef struct {
 typedef struct {
 	uint size;
 	uint capacity;
-	Range2 **array;
-} Range2Array;
+	Rect **array;
+} RectArray;
 
 typedef struct {
 	uint size;
@@ -45,15 +45,15 @@ typedef struct {
 
 #define VEC_ZERO (Vec2){0, 0}
 
-Vec2 range_get_center(Range2 *range);
+Vec2 rect_get_center(Rect *rect);
 
-bool range_contains_point(Range2 *range, Vec2 *point);
+bool rect_intersects_point(Rect *rect, Vec2 *point);
 
-bool range_intersects_range(Range2 *r1, Range2 *r2);
+bool rect_intersects_rect(Rect *r1, Rect *r2);
 
-bool range_intersects_circle(Range2 *range, Circle *circle);
+bool rect_intersects_circle(Rect *rect, Circle *circle);
 
-bool circle_intersects_circle(Circle *circle_a, Circle *circle_b);
+bool circle_intersects_circle(Circle *c1, Circle *c2);
 
 bool point_array_init(PointArray *point_array);
 
@@ -67,11 +67,11 @@ bool circle_array_push_back(CircleArray *circle_array, Circle *circle);
 
 void circle_array_clear(CircleArray *circle_array);
 
-bool range_array_init(Range2Array *range_array);
+bool rect_array_init(RectArray *rect_array);
 
-bool range_array_push_back(Range2Array *range_array, Range2 *range);
+bool rect_array_push_back(RectArray *rect_array, Rect *rect);
 
-void range_array_clear(Range2Array *range_array);
+void rect_array_clear(RectArray *rect_array);
 
 timespec timespec_diff(const timespec *t1, const timespec *t2);
 
