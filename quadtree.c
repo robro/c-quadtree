@@ -55,9 +55,25 @@ void quadtree_free(QuadTree *qtree) {
 	free(qtree);
 }
 
-typedef bool RectIntersectsShapeFunc(Rect *, void *);
+typedef bool ShapeIntersectsShapeFunc(void *, void *);
 
-bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, RectIntersectsShapeFunc func) {
+bool _rect_intersects_point(void *rect, void *point) {
+	return rect_intersects_point(rect, point);
+}
+
+bool _rect_intersects_rect(void *rect1, void *rect2) {
+	return rect_intersects_rect(rect1, rect2);
+}
+
+bool _rect_intersects_circle(void *rect, void *circle) {
+	return rect_intersects_circle(rect, circle);
+}
+
+bool _circle_intersects_circle(void *circle1, void *circle2) {
+	return circle_intersects_circle(circle1, circle2);
+}
+
+bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, ShapeIntersectsShapeFunc func) {
 	QuadTreeNode *node = &qtree->nodes[index];
 
 	if (!func(&node->boundary, shape)) {
@@ -119,18 +135,6 @@ bool quadtree_node_add_shape(QuadTree *qtree, int index, void *shape, RectInters
 	return false;
 }
 
-bool _rect_intersects_point(Rect *rect, void *point) {
-	return rect_intersects_point(rect, point);
-}
-
-bool _rect_intersects_rect(Rect *rect1, void *rect2) {
-	return rect_intersects_rect(rect1, rect2);
-}
-
-bool _rect_intersects_circle(Rect *rect, void *circle) {
-	return rect_intersects_circle(rect, circle);
-}
-
 void quadtree_add_points(QuadTree *qtree, Vec2 *points, int point_count) {
 	for (int i = 0; i < point_count; ++i) {
 		quadtree_node_add_shape(qtree, 0, &points[i], _rect_intersects_point);
@@ -149,87 +153,49 @@ void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count) {
 	}
 }
 
-void quadtree_node_points_intersecting_rect(QuadTree *qtree, int index, Rect *rect, PointArray *results) {
-	QuadTreeNode *node = &qtree->nodes[index];
-	if (node->entity_count == 0) {
-		return;
-	}
-	if (!rect_intersects_rect(&node->boundary, rect)) {
-		return;
-	}
-	for (int i = 0; i < node->entity_count; ++i) {
-		if (rect_intersects_point(rect, node->entities[i])) {
-			point_array_push_back(results, node->entities[i]);
-		}
-	}
-	if (node->child_indices[0] < 0) {
-		return;
-	}
-	for (int i = 0; i < 4; ++i) {
-		quadtree_node_points_intersecting_rect(qtree, node->child_indices[i], rect, results);
-	}
+typedef void ShapeArrayPushBackFunc(void *, void *);
+
+void _point_array_push_back(void *array, void *point) {
+	point_array_push_back(array, point);
 }
 
-void quadtree_node_rects_intersecting_rect(QuadTree *qtree, int index, Rect *rect, RectArray *results) {
-	QuadTreeNode *node = &qtree->nodes[index];
-	if (node->entity_count == 0) {
-		return;
-	}
-	if (!rect_intersects_rect(&node->boundary, rect)) {
-		return;
-	}
-	for (int i = 0; i < node->entity_count; ++i) {
-		if (rect == node->entities[i]) {
-			continue;
-		}
-		if (rect_intersects_rect(rect, node->entities[i])) {
-			rect_array_push_back(results, node->entities[i]);
-		}
-	}
-	if (node->child_indices[0] < 0) {
-		return;
-	}
-	for (int i = 0; i < 4; ++i) {
-		quadtree_node_rects_intersecting_rect(qtree, node->child_indices[i], rect, results);
-	}
+void _rect_array_push_back(void *array, void *rect) {
+	rect_array_push_back(array, rect);
 }
 
-void quadtree_node_circles_intersecting_circle(QuadTree *qtree, int index, Circle *circle, CircleArray *results) {
+void _circle_array_push_back(void *array, void *circle) {
+	circle_array_push_back(array, circle);
+}
+
+void quadtree_node_shapes_intersecting_shape(QuadTree *qtree, int index, void *shape, void *results, ShapeIntersectsShapeFunc func1, ShapeIntersectsShapeFunc func2, ShapeArrayPushBackFunc func3) {
 	QuadTreeNode *node = &qtree->nodes[index];
 	if (node->entity_count == 0) {
 		return;
 	}
-	if (!rect_intersects_circle(&node->boundary, circle)) {
+	if (!func1(&node->boundary, shape)) {
 		return;
 	}
 	for (int i = 0; i < node->entity_count; ++i) {
-		if (circle == node->entities[i]) {
-			continue;
-		}
-		if (circle_intersects_circle(circle, node->entities[i])) {
-			circle_array_push_back(results, node->entities[i]);
+		if (func2(shape, node->entities[i])) {
+			func3(results, node->entities[i]);
 		}
 	}
 	if (node->child_indices[0] < 0) {
 		return;
 	}
 	for (int i = 0; i < 4; ++i) {
-		quadtree_node_circles_intersecting_circle(qtree, node->child_indices[i], circle, results);
+		quadtree_node_shapes_intersecting_shape(qtree, node->child_indices[i], shape, results, func1, func2, func3);
 	}
 }
 
 void quadtree_points_intersecting_rect(QuadTree *qtree, Rect *rect, PointArray *results) {
-	quadtree_node_points_intersecting_rect(qtree, 0, rect, results);
+	quadtree_node_shapes_intersecting_shape(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_point, _point_array_push_back);
 }
 
 void quadtree_rects_intersecting_rect(QuadTree *qtree, Rect *rect, RectArray *results) {
-	quadtree_node_rects_intersecting_rect(qtree, 0, rect, results);
+	quadtree_node_shapes_intersecting_shape(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_rect, _rect_array_push_back);
 }
 
-/*
- * Finds Circles in QuadTree overlapping input Circle and returns result in CircleArray.
- */
 void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, CircleArray *results) {
-	quadtree_node_circles_intersecting_circle(qtree, 0, circle, results);
+	quadtree_node_shapes_intersecting_shape(qtree, 0, circle, results, _rect_intersects_circle, _circle_intersects_circle, _circle_array_push_back);
 }
-
