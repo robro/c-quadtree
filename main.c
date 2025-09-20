@@ -69,6 +69,7 @@ int main(void) {
 		work_time = timespec_diff(&end_time, &start_time);
 		printf("point overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 	}
+	free(overlapping_points.array);
 #endif
 
 #if RECT_BENCH
@@ -89,6 +90,7 @@ int main(void) {
 		work_time = timespec_diff(&end_time, &start_time);
 		printf("range overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 	}
+	free(overlapping_rects.array);
 #endif
 
 #if CIRC_BENCH
@@ -109,6 +111,7 @@ int main(void) {
 		work_time = timespec_diff(&end_time, &start_time);
 		printf("circle overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 	}
+	free(overlapping_circles.array);
 #endif
 
 	quadtree_free(qtree);
