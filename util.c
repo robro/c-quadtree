@@ -60,7 +60,7 @@ typedef struct {
 	void **array;
 } VoidArray;
 
-bool void_array_init(void *array) {
+static inline bool void_array_init(void *array) {
 	void **new_array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
 	if (new_array == NULL) {
 		return false;
@@ -72,7 +72,7 @@ bool void_array_init(void *array) {
 	return true;
 }
 
-bool void_array_push_back(void *array, void *value) {
+static inline bool void_array_push_back(void *array, void *value) {
 	VoidArray *void_array = array;
 	if (void_array->size == void_array->capacity) {
 		void **new_array = realloc(void_array->array, sizeof(void *) * void_array->capacity * 2);
@@ -86,7 +86,7 @@ bool void_array_push_back(void *array, void *value) {
 	return true;
 }
 
-void void_array_clear(void *array) {
+static inline void void_array_clear(void *array) {
 	VoidArray *void_array = array;
 	void_array->size = 0;
 }
