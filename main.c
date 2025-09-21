@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -9,10 +10,10 @@
 #define RECTS_QUADTREE 0
 #define CIRCLES_QUADTREE 1
 
-const uint ENTITY_COUNT = 100;
+const uint ENTITY_COUNT = 1000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
-const uint FRAMES = 1;
+const uint FRAMES = 50;
 const float RADIUS = 2.5;
 const float VELOCITY_RANGE = 10.0;
 
@@ -56,6 +57,7 @@ int main(void) {
 		};
 	}
 	printf("entity count: %d\n", ENTITY_COUNT);
+	memcpy(entities_circle_future, entities_circle, sizeof(EntityCircle) * ENTITY_COUNT);
 
 	timespec start_time;
 	timespec end_time;
@@ -105,29 +107,39 @@ int main(void) {
 #endif
 
 #if CIRCLES_QUADTREE
-	EntityCircleArray overlapping_circles = {};
-	entity_circle_array_init(&overlapping_circles);
+	DynamicArray results;
+	dynamic_array_init(&results);
+	EntityCircle *intersecting_entity;
 
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
 		overlap_count = 0;
 		quadtree_add_entities_circle(qtree, entities_circle, ENTITY_COUNT);
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &overlapping_circles);
+			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &results);
 			// calculate new velocity
-			printf("physics influences...\n");
-			for (k = 0; k < overlapping_circles.size; ++k) {
-				printf("velocity: x= %f, y= %f\n", overlapping_circles.array[k]->velocity.x, overlapping_circles.array[k]->velocity.y);
-			}
-			overlap_count += overlapping_circles.size;
-			entity_circle_array_clear(&overlapping_circles);
+			// printf("physics influences...\n");
+			// for (k = 0; k < results.size; ++k) {
+			// 	intersecting_entity = results.array[k];
+			// 	printf(
+			// 		"velocity: x= %f, y= %f\n",
+			// 		intersecting_entity->velocity.x,
+			// 		intersecting_entity->velocity.y
+			// 	);
+			// }
+			overlap_count += results.size;
+			dynamic_array_clear(&results);
+			entities_circle_future[j].shape.position.x += entities_circle[j].velocity.x;
+			entities_circle_future[j].shape.position.y += entities_circle[j].velocity.y;
 		}
+
+		memcpy(entities_circle, entities_circle_future, sizeof(EntityCircle) * ENTITY_COUNT);
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
 		printf("circle overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
 	}
-	free(overlapping_circles.array);
+	free(results.array);
 #endif
 
 	quadtree_free(qtree);

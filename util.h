@@ -31,66 +31,30 @@ typedef struct {
 typedef struct {
 	uint size;
 	uint capacity;
-	Vec2 **array;
-} PointArray;
-
-typedef struct {
-	uint size;
-	uint capacity;
-	Rect **array;
-} RectArray;
-
-typedef struct {
-	uint size;
-	uint capacity;
-	Circle **array;
-} CircleArray;
-
-typedef struct {
-	uint size;
-	uint capacity;
-	EntityCircle **array;
-} EntityCircleArray;
+	void **array;
+} DynamicArray;
 
 Vec2 rect_get_center(Rect *rect);
 
 bool rect_intersects_point(Rect *rect, Vec2 *point);
 
-bool rect_intersects_rect(Rect *rect1, Rect *rect2);
+bool rect_intersects_rect(Rect *rect_1, Rect *rect_2);
 
 bool rect_intersects_circle(Rect *rect, Circle *circle);
 
 bool rect_intersects_entity_circle(Rect *rect, EntityCircle *entity_circle);
 
-bool circle_intersects_circle(Circle *circle1, Circle *circle2);
+bool circle_intersects_circle(Circle *circle_1, Circle *circle_2);
 
 bool entity_circle_intersects_entity_circle(EntityCircle *entity_circle_1, EntityCircle *entity_circle_2);
 
-bool point_array_init(PointArray *point_array);
+bool dynamic_array_init(void *array);
 
-bool point_array_push_back(PointArray *point_array, Vec2 *point);
+bool dynamic_array_push_back(void *array, void *value);
 
-void point_array_clear(PointArray *point_array);
+void dynamic_array_clear(void *array);
 
-bool circle_array_init(CircleArray *circle_array);
-
-bool circle_array_push_back(CircleArray *circle_array, Circle *circle);
-
-void circle_array_clear(CircleArray *circle_array);
-
-bool entity_circle_array_init(EntityCircleArray *circle_array);
-
-bool entity_circle_array_push_back(EntityCircleArray *circle_array, EntityCircle *circle);
-
-void entity_circle_array_clear(EntityCircleArray *circle_array);
-
-bool rect_array_init(RectArray *rect_array);
-
-bool rect_array_push_back(RectArray *rect_array, Rect *rect);
-
-void rect_array_clear(RectArray *rect_array);
-
-timespec timespec_diff(const timespec *time1, const timespec *time2);
+timespec timespec_diff(const timespec *time_1, const timespec *time_2);
 
 float timespec_to_secs(const timespec *time);
 
