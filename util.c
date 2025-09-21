@@ -48,6 +48,9 @@ Vec2 vec2_mult(const Vec2 *vec, float num) {
 }
 
 Vec2 vec2_div(const Vec2 *vec, float num) {
+	if (num == 0) {
+		return *vec;
+	}
 	return (Vec2){
 		.x = vec->x / num,
 		.y = vec->y / num,
