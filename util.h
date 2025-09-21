@@ -44,7 +44,7 @@ Vec2 vec2_div(const Vec2 *vec, float num);
 
 Vec2 vec2_normalized(const Vec2 *vec);
 
-Vec2 vec2_direction(const Vec2 *vec_1, const Vec2 *vec_2);
+Vec2 vec2_direction(const Vec2 *vec_from, const Vec2 *vec_to);
 
 float vec2_length(const Vec2 *vec);
 
