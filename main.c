@@ -133,9 +133,11 @@ int main(void) {
 				collision_normal = vec2_normalized(&collision_normal_sum);
 				// printf("avg collision normal: x= %f, y= %f\n", collision_normal.x, collision_normal.y);
 				velocity_magnitude = vec2_length(&entities_circle[j].velocity);
-				entities_circle_future[j].shape.position.x += collision_normal.x * velocity_magnitude;
-				entities_circle_future[j].shape.position.y += collision_normal.y * velocity_magnitude;
+				entities_circle_future[j].velocity.x = collision_normal.x * velocity_magnitude;
+				entities_circle_future[j].velocity.y = collision_normal.y * velocity_magnitude;
 			}
+			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x;
+			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y;
 			overlap_count += results.size;
 			dynamic_array_clear(&results);
 		}
