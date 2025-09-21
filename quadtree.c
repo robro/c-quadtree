@@ -69,12 +69,12 @@ bool _rect_intersects_circle(const void *rect, const void *circle) {
 	return rect_intersects_circle(rect, circle);
 }
 
-bool _circle_intersects_circle(const void *circle1, const void *circle2) {
-	return circle_intersects_circle(circle1, circle2);
-}
-
 bool _rect_intersects_entity_circle(const void *rect, const void *entity_circle) {
 	return rect_intersects_entity_circle(rect, entity_circle);
+}
+
+bool _circle_intersects_circle(const void *circle1, const void *circle2) {
+	return circle_intersects_circle(circle1, circle2);
 }
 
 bool _entity_circle_intersects_entity_circle(const void *entity_circle_1, const void *entity_circle_2) {
@@ -153,10 +153,6 @@ void quadtree_add_rects(QuadTree *qtree, Rect *rects, int count) {
 	for (int i = 0; i < count; ++i) {
 		quadtree_node_add_entity(qtree, 0, &rects[i], _rect_intersects_rect);
 	}
-}
-
-void quadtree_add_circle(QuadTree *qtree, Circle *circle) {
-	quadtree_node_add_entity(qtree, 0, circle, _rect_intersects_circle);
 }
 
 void quadtree_add_circles(QuadTree *qtree, Circle *circles, int count) {
