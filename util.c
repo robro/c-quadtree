@@ -67,7 +67,7 @@ Vec2 vec2_normalized(const Vec2 *vec) {
 }
 
 Vec2 vec2_direction(const Vec2 *vec_1, const Vec2 *vec_2) {
-	Vec2 difference = vec2_diff(vec_1, vec_2);
+	Vec2 difference = vec2_diff(vec_2, vec_1);
 	return vec2_normalized(&difference);
 }
 
