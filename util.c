@@ -26,24 +26,49 @@ float clamp_float(float value, float min, float max) {
 	return (v > max) ? max : v;
 }
 
-static inline Vec2 vec2_add(const Vec2 *vec_1, const Vec2 *vec_2) {
+Vec2 vec2_add(const Vec2 *vec_1, const Vec2 *vec_2) {
 	return (Vec2){
 		.x = vec_1->x + vec_2->x,
 		.y = vec_1->y + vec_2->y,
 	};
 }
-static inline Vec2 vec2_diff(const Vec2 *vec_1, const Vec2 *vec_2) {
+
+Vec2 vec2_diff(const Vec2 *vec_1, const Vec2 *vec_2) {
 	return (Vec2){
 		.x = vec_1->x - vec_2->x,
 		.y = vec_1->y - vec_2->y,
 	};
 }
 
-static inline float vec2_length(Vec2 *vec) {
+Vec2 vec2_mult(const Vec2 *vec, float num) {
+	return (Vec2){
+		.x = vec->x * num,
+		.y = vec->y * num,
+	};
+}
+
+Vec2 vec2_div(const Vec2 *vec, float num) {
+	return (Vec2){
+		.x = vec->x / num,
+		.y = vec->y / num,
+	};
+}
+
+float vec2_length(const Vec2 *vec) {
 	return sqrt(vec->x * vec->x + vec->y * vec->y);
 }
 
-Vec2 rect_get_center(Rect *rect) {
+Vec2 vec2_normalized(const Vec2 *vec) {
+	float length = vec2_length(vec);
+	return vec2_div(vec, length);
+}
+
+Vec2 vec2_direction(const Vec2 *vec_1, const Vec2 *vec_2) {
+	Vec2 difference = vec2_diff(vec_1, vec_2);
+	return vec2_normalized(&difference);
+}
+
+Vec2 rect_get_center(const Rect *rect) {
 	return (Vec2){
 		.x = rect->min.x + (rect->max.x - rect->min.x) / 2,
 		.y = rect->min.y + (rect->max.y - rect->min.y) / 2,
@@ -81,7 +106,7 @@ void dynamic_array_clear(void *array) {
 	dynamic_array->size = 0;
 }
 
-bool rect_intersects_circle(Rect *rect, Circle *circle) {
+bool rect_intersects_circle(const Rect *rect, const Circle *circle) {
 	Vec2 rect_center = rect_get_center(rect);
 	Vec2 difference = vec2_diff(&circle->position, &rect_center);
 	Vec2 clamped = {
@@ -97,7 +122,7 @@ bool rect_intersects_circle(Rect *rect, Circle *circle) {
 	return vec2_length(&difference) < circle->radius;
 }
 
-bool rect_intersects_rect(Rect *rect_1, Rect *rect_2) {
+bool rect_intersects_rect(const Rect *rect_1, const Rect *rect_2) {
 	if (rect_1->max.x < rect_2->min.x || rect_1->min.x >= rect_2->max.x ||
 		rect_1->max.y < rect_2->min.y || rect_1->min.y >= rect_2->max.y) {
 		return false;
@@ -105,7 +130,7 @@ bool rect_intersects_rect(Rect *rect_1, Rect *rect_2) {
 	return true;
 }
 
-bool rect_intersects_point(Rect *rect, Vec2 *point) {
+bool rect_intersects_point(const Rect *rect, const Vec2 *point) {
 	if (point->x < rect->min.x || point->x >= rect->max.x ||
 		point->y < rect->min.y || point->y >= rect->max.y) {
 		return false;
@@ -113,15 +138,15 @@ bool rect_intersects_point(Rect *rect, Vec2 *point) {
 	return true;
 }
 
-bool circle_intersects_circle(Circle *circle_1, Circle *circle_2) {
+bool circle_intersects_circle(const Circle *circle_1, const Circle *circle_2) {
 	Vec2 difference = vec2_diff(&circle_1->position, &circle_2->position);
 	return vec2_length(&difference) < circle_1->radius + circle_2->radius;
 }
 
-bool rect_intersects_entity_circle(Rect *rect, EntityCircle *entity_circle) {
+bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *entity_circle) {
 	return rect_intersects_circle(rect, &entity_circle->shape);
 }
 
-bool entity_circle_intersects_entity_circle(EntityCircle *entity_circle_1, EntityCircle *entity_circle_2) {
+bool entity_circle_intersects_entity_circle(const EntityCircle *entity_circle_1, const EntityCircle *entity_circle_2) {
 	return circle_intersects_circle(&entity_circle_1->shape, &entity_circle_2->shape);
 }

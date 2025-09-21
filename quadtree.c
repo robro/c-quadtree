@@ -21,13 +21,13 @@ struct QuadTree {
 	QuadTreeNode *nodes;
 };
 
-void quadtree_node_init(QuadTreeNode *node, Rect *boundary) {
+void quadtree_node_init(QuadTreeNode *node, const Rect *boundary) {
 	node->entity_count = 0;
 	node->boundary = *boundary;
 	node->child_indices[0] = -1;
 }
 
-QuadTree* quadtree_new(Rect *boundary) {
+QuadTree* quadtree_new(const Rect *boundary) {
 	assert(boundary->min.x < boundary->max.x && boundary->min.y < boundary->max.y);
 	QuadTree *qtree = malloc(sizeof(*qtree));
 	if (qtree == NULL) {
@@ -55,29 +55,29 @@ void quadtree_free(QuadTree *qtree) {
 	free(qtree);
 }
 
-typedef bool IntersectsFunc(void *, void *);
+typedef bool IntersectsFunc(const void *, const void *);
 
-bool _rect_intersects_point(void *rect, void *point) {
+bool _rect_intersects_point(const void *rect, const void *point) {
 	return rect_intersects_point(rect, point);
 }
 
-bool _rect_intersects_rect(void *rect1, void *rect2) {
+bool _rect_intersects_rect(const void *rect1, const void *rect2) {
 	return rect_intersects_rect(rect1, rect2);
 }
 
-bool _rect_intersects_circle(void *rect, void *circle) {
+bool _rect_intersects_circle(const void *rect, const void *circle) {
 	return rect_intersects_circle(rect, circle);
 }
 
-bool _circle_intersects_circle(void *circle1, void *circle2) {
+bool _circle_intersects_circle(const void *circle1, const void *circle2) {
 	return circle_intersects_circle(circle1, circle2);
 }
 
-bool _rect_intersects_entity_circle(void *rect, void *entity_circle) {
+bool _rect_intersects_entity_circle(const void *rect, const void *entity_circle) {
 	return rect_intersects_entity_circle(rect, entity_circle);
 }
 
-bool _entity_circle_intersects_entity_circle(void *entity_circle_1, void *entity_circle_2) {
+bool _entity_circle_intersects_entity_circle(const void *entity_circle_1, const void *entity_circle_2) {
 	return entity_circle_intersects_entity_circle(entity_circle_1, entity_circle_2);
 }
 
@@ -171,7 +171,7 @@ void quadtree_add_entities_circle(QuadTree *qtree, EntityCircle *entities_circle
 	}
 }
 
-void quadtree_node_entities_intersecting_entity(QuadTree *qtree, int index, void *entity, void *results, IntersectsFunc intersects_node, IntersectsFunc intersects_entity) {
+void quadtree_node_entities_intersecting_entity(const QuadTree *qtree, int index, const void *entity, void *results, IntersectsFunc intersects_node, IntersectsFunc intersects_entity) {
 	QuadTreeNode *node = &qtree->nodes[index];
 	if (node->entity_count == 0) {
 		return;
@@ -180,6 +180,9 @@ void quadtree_node_entities_intersecting_entity(QuadTree *qtree, int index, void
 		return;
 	}
 	for (int i = 0; i < node->entity_count; ++i) {
+		if (entity == node->entities[i]) {
+			continue;
+		}
 		if (intersects_entity(entity, node->entities[i])) {
 			dynamic_array_push_back(results, node->entities[i]);
 		}
@@ -192,18 +195,18 @@ void quadtree_node_entities_intersecting_entity(QuadTree *qtree, int index, void
 	}
 }
 
-void quadtree_points_intersecting_rect(QuadTree *qtree, Rect *rect, DynamicArray *results) {
+void quadtree_points_intersecting_rect(const QuadTree *qtree, const Rect *rect, DynamicArray *results) {
 	quadtree_node_entities_intersecting_entity(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_point);
 }
 
-void quadtree_rects_intersecting_rect(QuadTree *qtree, Rect *rect, DynamicArray *results) {
+void quadtree_rects_intersecting_rect(const QuadTree *qtree, const Rect *rect, DynamicArray *results) {
 	quadtree_node_entities_intersecting_entity(qtree, 0, rect, results, _rect_intersects_rect, _rect_intersects_rect);
 }
 
-void quadtree_circles_intersecting_circle(QuadTree *qtree, Circle *circle, DynamicArray *results) {
+void quadtree_circles_intersecting_circle(const QuadTree *qtree, const Circle *circle, DynamicArray *results) {
 	quadtree_node_entities_intersecting_entity(qtree, 0, circle, results, _rect_intersects_circle, _circle_intersects_circle);
 }
 
-void quadtree_entities_circle_intersecting_entity_circle(QuadTree *qtree, EntityCircle *entity_circle, DynamicArray *results) {
+void quadtree_entities_circle_intersecting_entity_circle(const QuadTree *qtree, const EntityCircle *entity_circle, DynamicArray *results) {
 	quadtree_node_entities_intersecting_entity(qtree, 0, entity_circle, results, _rect_intersects_entity_circle, _entity_circle_intersects_entity_circle);
 }

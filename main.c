@@ -13,7 +13,7 @@
 const uint ENTITY_COUNT = 1000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
-const uint FRAMES = 50;
+const uint FRAMES = 100;
 const float RADIUS = 2.5;
 const float VELOCITY_RANGE = 10.0;
 
@@ -109,7 +109,10 @@ int main(void) {
 #if CIRCLES_QUADTREE
 	DynamicArray results;
 	dynamic_array_init(&results);
-	EntityCircle *intersecting_entity;
+	EntityCircle *colliding_circle;
+	Vec2 collision_normal;
+	Vec2 collision_normal_sum;
+	float velocity_magnitude;
 
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
@@ -117,20 +120,24 @@ int main(void) {
 		quadtree_add_entities_circle(qtree, entities_circle, ENTITY_COUNT);
 		for (j = 0; j < ENTITY_COUNT; ++j) {
 			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &results);
-			// calculate new velocity
-			// printf("physics influences...\n");
-			// for (k = 0; k < results.size; ++k) {
-			// 	intersecting_entity = results.array[k];
-			// 	printf(
-			// 		"velocity: x= %f, y= %f\n",
-			// 		intersecting_entity->velocity.x,
-			// 		intersecting_entity->velocity.y
-			// 	);
-			// }
+
+			if (results.size > 0) {
+				// printf("%d collision normals\n", results.size);
+				collision_normal_sum = (Vec2){0, 0};
+				for (k = 0; k < results.size; ++k) {
+					colliding_circle = results.array[k];
+					collision_normal = vec2_direction(&colliding_circle->shape.position, &entities_circle[j].shape.position);
+					// printf("collision normal: x= %f, y= %f\n", collision_normal.x, collision_normal.y);
+					collision_normal_sum = vec2_add(&collision_normal_sum, &collision_normal);
+				}
+				collision_normal = vec2_normalized(&collision_normal_sum);
+				// printf("avg collision normal: x= %f, y= %f\n", collision_normal.x, collision_normal.y);
+				velocity_magnitude = vec2_length(&entities_circle[j].velocity);
+				entities_circle_future[j].shape.position.x += collision_normal.x * velocity_magnitude;
+				entities_circle_future[j].shape.position.y += collision_normal.y * velocity_magnitude;
+			}
 			overlap_count += results.size;
 			dynamic_array_clear(&results);
-			entities_circle_future[j].shape.position.x += entities_circle[j].velocity.x;
-			entities_circle_future[j].shape.position.y += entities_circle[j].velocity.y;
 		}
 
 		memcpy(entities_circle, entities_circle_future, sizeof(EntityCircle) * ENTITY_COUNT);

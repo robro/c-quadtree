@@ -34,19 +34,33 @@ typedef struct {
 	void **array;
 } DynamicArray;
 
-Vec2 rect_get_center(Rect *rect);
+Vec2 vec2_add(const Vec2 *vec_1, const Vec2 *vec_2);
 
-bool rect_intersects_point(Rect *rect, Vec2 *point);
+Vec2 vec2_diff(const Vec2 *vec_1, const Vec2 *vec_2);
 
-bool rect_intersects_rect(Rect *rect_1, Rect *rect_2);
+Vec2 vec2_mult(const Vec2 *vec, float num);
 
-bool rect_intersects_circle(Rect *rect, Circle *circle);
+Vec2 vec2_div(const Vec2 *vec, float num);
 
-bool rect_intersects_entity_circle(Rect *rect, EntityCircle *entity_circle);
+Vec2 vec2_normalized(const Vec2 *vec);
 
-bool circle_intersects_circle(Circle *circle_1, Circle *circle_2);
+Vec2 vec2_direction(const Vec2 *vec_1, const Vec2 *vec_2);
 
-bool entity_circle_intersects_entity_circle(EntityCircle *entity_circle_1, EntityCircle *entity_circle_2);
+float vec2_length(const Vec2 *vec);
+
+Vec2 rect_get_center(const Rect *rect);
+
+bool rect_intersects_point(const Rect *rect, const Vec2 *point);
+
+bool rect_intersects_rect(const Rect *rect_1, const Rect *rect_2);
+
+bool rect_intersects_circle(const Rect *rect, const Circle *circle);
+
+bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *entity_circle);
+
+bool circle_intersects_circle(const Circle *circle_1, const Circle *circle_2);
+
+bool entity_circle_intersects_entity_circle(const EntityCircle *entity_circle_1, const EntityCircle *entity_circle_2);
 
 bool dynamic_array_init(void *array);
 
