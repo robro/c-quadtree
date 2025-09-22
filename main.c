@@ -6,14 +6,14 @@
 #include "quadtree.h"
 #include "util.h"
 
-#define POINTS_QUADTREE 0
-#define RECTS_QUADTREE 0
-#define CIRCLES_QUADTREE 1
+#define POINTS_TEST 1
+#define RECTS_TEST 1
+#define CIRCLES_TEST 1
 
 const uint ENTITY_COUNT = 1000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
-const uint FRAMES = 100;
+const uint FRAMES = 10;
 const float RADIUS = 2.5;
 const float VELOCITY_RANGE = 10.0;
 
@@ -62,95 +62,84 @@ int main(void) {
 	timespec start_time;
 	timespec end_time;
 	timespec work_time;
-	uint overlap_count;
+	DynamicArray collisions;
+	dynamic_array_init(&collisions);
+	uint total_collisions;
 
-#if POINTS_QUADTREE
-	PointArray overlapping_points = {};
-	point_array_init(&overlapping_points);
-
+#if POINTS_TEST
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
+		total_collisions = 0;
 		quadtree_add_points(qtree, points, ENTITY_COUNT);
-		overlap_count = 0;
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			quadtree_points_intersecting_rect(qtree, &rects[j], &overlapping_points);
-			overlap_count += overlapping_points.size;
-			point_array_clear(&overlapping_points);
+			dynamic_array_clear(&collisions);
+			quadtree_points_intersecting_rect(qtree, &rects[j], &collisions);
+			total_collisions += collisions.size;
 		}
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
-		printf("point overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
+		printf("point overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 	}
-	free(overlapping_points.array);
 #endif
 
-#if RECTS_QUADTREE
-	RectArray overlapping_rects = {};
-	rect_array_init(&overlapping_rects);
-
+#if RECTS_TEST
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
+		total_collisions = 0;
 		quadtree_add_rects(qtree, rects, ENTITY_COUNT);
-		overlap_count = 0;
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			quadtree_rects_intersecting_rect(qtree, &rects[j], &overlapping_rects);
-			overlap_count += overlapping_rects.size;
-			rect_array_clear(&overlapping_rects);
+			dynamic_array_clear(&collisions);
+			quadtree_rects_intersecting_rect(qtree, &rects[j], &collisions);
+			total_collisions += collisions.size;
 		}
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
-		printf("range overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
+		printf("range overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 	}
-	free(overlapping_rects.array);
 #endif
 
-#if CIRCLES_QUADTREE
-	DynamicArray results;
-	dynamic_array_init(&results);
+#if CIRCLES_TEST
 	EntityCircle *colliding_circle;
 	Vec2 collision_normal;
 	Vec2 collision_normal_sum;
-	float velocity_magnitude;
+	float velocity_length;
 
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
-		overlap_count = 0;
+		total_collisions = 0;
 		quadtree_add_entities_circle(qtree, entities_circle, ENTITY_COUNT);
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &results);
+			dynamic_array_clear(&collisions);
+			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &collisions);
 
-			if (results.size > 0) {
-				// printf("%d collision normals\n", results.size);
+			if (collisions.size > 0) {
 				collision_normal_sum = (Vec2){0, 0};
-				for (k = 0; k < results.size; ++k) {
-					colliding_circle = results.array[k];
+				for (k = 0; k < collisions.size; ++k) {
+					colliding_circle = collisions.array[k];
 					collision_normal = vec2_direction(&colliding_circle->shape.position, &entities_circle[j].shape.position);
-					// printf("collision normal: x= %f, y= %f\n", collision_normal.x, collision_normal.y);
 					collision_normal_sum = vec2_add(&collision_normal_sum, &collision_normal);
 				}
 				collision_normal = vec2_normalized(&collision_normal_sum);
-				// printf("avg collision normal: x= %f, y= %f\n", collision_normal.x, collision_normal.y);
-				velocity_magnitude = vec2_length(&entities_circle[j].velocity);
-				entities_circle_future[j].velocity.x = collision_normal.x * velocity_magnitude;
-				entities_circle_future[j].velocity.y = collision_normal.y * velocity_magnitude;
+				velocity_length = vec2_length(&entities_circle[j].velocity);
+				entities_circle_future[j].velocity.x = collision_normal.x * velocity_length;
+				entities_circle_future[j].velocity.y = collision_normal.y * velocity_length;
 			}
 			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x;
 			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y;
-			overlap_count += results.size;
-			dynamic_array_clear(&results);
+			total_collisions += collisions.size;
 		}
 
 		memcpy(entities_circle, entities_circle_future, sizeof(EntityCircle) * ENTITY_COUNT);
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
 		work_time = timespec_diff(&end_time, &start_time);
-		printf("circle overlap count: %d | time: %f secs\n", overlap_count, timespec_to_secs(&work_time));
+		printf("circle overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 	}
-	free(results.array);
 #endif
 
+	free(collisions.array);
 	quadtree_free(qtree);
 	return 0;
 }
