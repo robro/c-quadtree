@@ -81,7 +81,7 @@ int main(void) {
 		}
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		work_time = timespec_diff(&end_time, &start_time);
+		work_time = timespec_subtract(&end_time, &start_time);
 		printf("point overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 	}
 #endif
@@ -98,7 +98,7 @@ int main(void) {
 		}
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		work_time = timespec_diff(&end_time, &start_time);
+		work_time = timespec_subtract(&end_time, &start_time);
 		printf("range overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 	}
 #endif
@@ -126,10 +126,10 @@ int main(void) {
 					collision_normal_sum = vec2_add(&collision_normal_sum, &collision_normal);
 				}
 				collision_normal = vec2_normalized(&collision_normal_sum);
-				dot_product = vec2_dot(&entities_circle[j].velocity, &collision_normal);
+				dot_product = vec2_dot_product(&entities_circle[j].velocity, &collision_normal);
 				if (dot_product < 0) {
-					new_velocity = vec2_mult(&collision_normal, 2 * dot_product);
-					new_velocity = vec2_diff(&entities_circle[j].velocity, &new_velocity);
+					new_velocity = vec2_multiply(&collision_normal, 2 * dot_product);
+					new_velocity = vec2_subtract(&entities_circle[j].velocity, &new_velocity);
 					entities_circle_future[j].velocity = new_velocity;
 				}
 			}
@@ -141,7 +141,7 @@ int main(void) {
 		memcpy(entities_circle, entities_circle_future, sizeof(EntityCircle) * ENTITY_COUNT);
 		quadtree_clear(qtree);
 		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		work_time = timespec_diff(&end_time, &start_time);
+		work_time = timespec_subtract(&end_time, &start_time);
 		printf("circle overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 	}
 #endif
