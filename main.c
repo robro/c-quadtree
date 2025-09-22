@@ -107,7 +107,6 @@ int main(void) {
 	EntityCircle *colliding_circle;
 	Vec2 collision_normal;
 	Vec2 collision_normal_sum;
-	float velocity_length;
 	float dot_product;
 	Vec2 new_velocity;
 
