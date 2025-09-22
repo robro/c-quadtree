@@ -46,6 +46,8 @@ Vec2 vec2_normalized(const Vec2 *vec);
 
 Vec2 vec2_direction(const Vec2 *vec_from, const Vec2 *vec_to);
 
+float vec2_dot(const Vec2 *vec_1, const Vec2 *vec_2);
+
 float vec2_length(const Vec2 *vec);
 
 Vec2 rect_get_center(const Rect *rect);

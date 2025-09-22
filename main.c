@@ -6,16 +6,19 @@
 #include "quadtree.h"
 #include "util.h"
 
-#define POINTS_TEST 1
-#define RECTS_TEST 1
+#define POINTS_TEST 0
+#define RECTS_TEST 0
 #define CIRCLES_TEST 1
 
 const uint ENTITY_COUNT = 1000;
 const uint WIDTH = 100;
 const uint HEIGHT = 100;
-const uint FRAMES = 10;
+const uint FRAMES = 100;
+const float FRAMES_PER_SECOND = 60;
 const float RADIUS = 2.5;
 const float VELOCITY_RANGE = 10.0;
+
+const float DELTA_TIME = 1.0 / FRAMES_PER_SECOND;
 
 int main(void) {
 	QuadTree *qtree = quadtree_new(&(Rect){
@@ -105,6 +108,8 @@ int main(void) {
 	Vec2 collision_normal;
 	Vec2 collision_normal_sum;
 	float velocity_length;
+	float dot_product;
+	Vec2 new_velocity;
 
 	for (i = 0; i < FRAMES; ++i) {
 		clock_gettime(CLOCK_MONOTONIC, &start_time);
@@ -113,7 +118,6 @@ int main(void) {
 		for (j = 0; j < ENTITY_COUNT; ++j) {
 			dynamic_array_clear(&collisions);
 			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &collisions);
-
 			if (collisions.size > 0) {
 				collision_normal_sum = (Vec2){0, 0};
 				for (k = 0; k < collisions.size; ++k) {
@@ -122,12 +126,15 @@ int main(void) {
 					collision_normal_sum = vec2_add(&collision_normal_sum, &collision_normal);
 				}
 				collision_normal = vec2_normalized(&collision_normal_sum);
-				velocity_length = vec2_length(&entities_circle[j].velocity);
-				entities_circle_future[j].velocity.x = collision_normal.x * velocity_length;
-				entities_circle_future[j].velocity.y = collision_normal.y * velocity_length;
+				dot_product = vec2_dot(&entities_circle[j].velocity, &collision_normal);
+				if (dot_product < 0) {
+					new_velocity = vec2_mult(&collision_normal, 2 * dot_product);
+					new_velocity = vec2_diff(&entities_circle[j].velocity, &new_velocity);
+					entities_circle_future[j].velocity = new_velocity;
+				}
 			}
-			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x;
-			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y;
+			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x * DELTA_TIME;
+			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y * DELTA_TIME;
 			total_collisions += collisions.size;
 		}
 

@@ -66,6 +66,10 @@ Vec2 vec2_normalized(const Vec2 *vec) {
 	return vec2_div(vec, length);
 }
 
+float vec2_dot(const Vec2 *vec_1, const Vec2 *vec_2) {
+	return vec_1->x * vec_2->x + vec_1->y * vec_2->y;
+}
+
 Vec2 vec2_direction(const Vec2 *vec_from, const Vec2 *vec_to) {
 	Vec2 difference = vec2_diff(vec_to, vec_from);
 	return vec2_normalized(&difference);
