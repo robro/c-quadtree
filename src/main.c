@@ -13,6 +13,7 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
 #define WINDOW_TITLE "Quadtree"
+#define FONT_SIZE 32
 
 // Physics
 #define ENTITY_COUNT 2500
@@ -22,9 +23,9 @@
 #define QT_WIDTH 800
 #define QT_HEIGHT 800
 #define TEST_FRAMES 100
-#define FRAMES_PER_SECOND 60
+#define TARGET_FPS 60
 
-#define DELTA_TIME (1.0 / FRAMES_PER_SECOND)
+#define FIXED_DELTA_TIME (1.0 / TARGET_FPS)
 
 int main(void) {
 	QuadTree *qtree = quadtree_new(&(Rect){
@@ -80,15 +81,17 @@ int main(void) {
 	Vec2 collision_normal_sum;
 	float dot_product;
 	Vec2 new_velocity;
-	char fps_text[8];
 
+	float delta_time;
+	char fps_str[32];
+	char frame_time_str[32];
+
+	SetConfigFlags(FLAG_MSAA_4X_HINT);
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
-	SetTargetFPS(FRAMES_PER_SECOND);
+	// SetTargetFPS(TARGET_FPS);
 
 	while (!WindowShouldClose()) {
 #if TEST_RECTS
-		clock_gettime(CLOCK_MONOTONIC, &start_time);
-		total_collisions = 0;
 		quadtree_add_rects(qtree, rects, ENTITY_COUNT);
 		for (j = 0; j < ENTITY_COUNT; ++j) {
 			dynamic_array_clear(&collisions);
@@ -96,14 +99,10 @@ int main(void) {
 			total_collisions += collisions.size;
 		}
 		quadtree_clear(qtree);
-		clock_gettime(CLOCK_MONOTONIC, &end_time);
-		work_time = timespec_subtract(&end_time, &start_time);
-		printf("range overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 #endif
 
 #if TEST_CIRCLES
-		// clock_gettime(CLOCK_MONOTONIC, &start_time);
-		// total_collisions = 0;
+		delta_time = GetFrameTime();
 		quadtree_clear(qtree);
 		quadtree_add_entities_circle(qtree, entities_circle, ENTITY_COUNT);
 		for (j = 0; j < ENTITY_COUNT; ++j) {
@@ -124,8 +123,8 @@ int main(void) {
 					entities_circle_future[j].velocity = new_velocity;
 				}
 			}
-			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x * DELTA_TIME;
-			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y * DELTA_TIME;
+			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x * FIXED_DELTA_TIME;
+			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y * FIXED_DELTA_TIME;
 			total_collisions += collisions.size;
 		}
 
@@ -137,12 +136,11 @@ int main(void) {
 		for (i = 0; i < ENTITY_COUNT; ++i) {
 			DrawCircle(entities_circle[i].shape.position.x, entities_circle[i].shape.position.y, entities_circle[i].shape.radius, BLUE);
 		}
-		sprintf(fps_text, "%d", GetFPS());
-		DrawText(fps_text, 0, 0, 24, WHITE);
+		sprintf(fps_str, "fps: %d", GetFPS());
+		sprintf(frame_time_str, "frame time: %f", delta_time);
+		DrawText(fps_str, 0, 0, FONT_SIZE, WHITE);
+		DrawText(frame_time_str, 0, FONT_SIZE, FONT_SIZE, WHITE);
 		EndDrawing();
-		// clock_gettime(CLOCK_MONOTONIC, &end_time);
-		// work_time = timespec_subtract(&end_time, &start_time);
-		// printf("circle overlap count: %d | time: %f secs\n", total_collisions, timespec_to_secs(&work_time));
 #endif
 	}
 
