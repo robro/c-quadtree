@@ -15,9 +15,9 @@
 #define WINDOW_TITLE "Quadtree"
 
 // Physics
-#define ENTITY_COUNT 1000
+#define ENTITY_COUNT 2500
 #define ENTITY_RADIUS 5
-#define VELOCITY_RANGE 100
+#define VELOCITY_RANGE 200
 
 #define QT_WIDTH 800
 #define QT_HEIGHT 800
@@ -80,6 +80,7 @@ int main(void) {
 	Vec2 collision_normal_sum;
 	float dot_product;
 	Vec2 new_velocity;
+	char fps_text[8];
 
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
 	SetTargetFPS(FRAMES_PER_SECOND);
@@ -132,10 +133,12 @@ int main(void) {
 
 		// Render
 		BeginDrawing();
-		ClearBackground(RAYWHITE);
+		ClearBackground(BLACK);
 		for (i = 0; i < ENTITY_COUNT; ++i) {
 			DrawCircle(entities_circle[i].shape.position.x, entities_circle[i].shape.position.y, entities_circle[i].shape.radius, BLUE);
 		}
+		sprintf(fps_text, "%d", GetFPS());
+		DrawText(fps_text, 0, 0, 24, WHITE);
 		EndDrawing();
 		// clock_gettime(CLOCK_MONOTONIC, &end_time);
 		// work_time = timespec_subtract(&end_time, &start_time);
