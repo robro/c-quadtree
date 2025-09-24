@@ -150,22 +150,22 @@ int main(void) {
 		}
 #elif TEST_TYPE == TEST_CIRCLES
 		uint entities_in_qtree = quadtree_add_entities_circle(qtree, entities_circle, ENTITY_COUNT);
-		for (j = 0; j < ENTITY_COUNT; ++j) {
+		for (i = 0; i < ENTITY_COUNT; ++i) {
 			dynamic_array_clear(&intersecting_entities);
-			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &intersecting_entities);
+			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[i], &intersecting_entities);
 			if (intersecting_entities.size > 0) {
 				Vec2 relative_velocity;
 				Vec2 collision_position_sum = VEC2_ZERO;
 				Vec2 relative_velocity_sum = VEC2_ZERO;
-				for (k = 0; k < intersecting_entities.size; ++k) {
-					EntityCircle *intersecting_circle = intersecting_entities.array[k];
+				for (j = 0; j < intersecting_entities.size; ++j) {
+					EntityCircle *intersecting_circle = intersecting_entities.array[j];
 					collision_position_sum = vec2_add(&collision_position_sum, &intersecting_circle->shape.position);
-					relative_velocity = vec2_subtract(&intersecting_circle->velocity, &entities_circle[j].velocity);
+					relative_velocity = vec2_subtract(&intersecting_circle->velocity, &entities_circle[i].velocity);
 					relative_velocity_sum = vec2_add(&relative_velocity_sum, &relative_velocity);
 				}
 				relative_velocity = vec2_divide(&relative_velocity_sum, intersecting_entities.size);
 				Vec2 collision_position = vec2_divide(&collision_position_sum, intersecting_entities.size);
-				Vec2 position_difference = vec2_subtract(&collision_position, &entities_circle[j].shape.position);
+				Vec2 position_difference = vec2_subtract(&collision_position, &entities_circle[i].shape.position);
 				if (vec2_dot_product(&position_difference, &relative_velocity) < 0) {
 					Vec2 tangent_vector = {
 						.x = -position_difference.y,
@@ -175,12 +175,12 @@ int main(void) {
 					float length = vec2_dot_product(&relative_velocity, &tangent_vector);
 					Vec2 velocity_on_tangent = vec2_multiply(&tangent_vector, length);
 					Vec2 velocity_perpendicular_to_tangent = vec2_subtract(&relative_velocity, &velocity_on_tangent);
-					entities_circle_future[j].velocity.x += velocity_perpendicular_to_tangent.x;
-					entities_circle_future[j].velocity.y += velocity_perpendicular_to_tangent.y;
+					entities_circle_future[i].velocity.x += velocity_perpendicular_to_tangent.x;
+					entities_circle_future[i].velocity.y += velocity_perpendicular_to_tangent.y;
 				}
 			}
-			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x * delta_time;
-			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y * delta_time;
+			entities_circle_future[i].shape.position.x += entities_circle_future[i].velocity.x * delta_time;
+			entities_circle_future[i].shape.position.y += entities_circle_future[i].velocity.y * delta_time;
 			total_collisions += intersecting_entities.size;
 		}
 
