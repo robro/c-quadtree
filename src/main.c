@@ -15,21 +15,21 @@
 #define TEST_TYPE TEST_CIRCLES
 
 #define WINDOW_TITLE "Quadtree"
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 800
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 1280
 #define FONT_SIZE 32
 
 #if RANDOM
 // Physics
 #define ENTITY_COUNT 5000
-#define ENTITY_RADIUS 2.5
+#define ENTITY_RADIUS 4
 #define VELOCITY_RANGE 100
 #else
 #define ENTITY_COUNT 3
 #endif
 
-#define QT_WIDTH 800
-#define QT_HEIGHT 800
+#define QT_WIDTH SCREEN_WIDTH
+#define QT_HEIGHT SCREEN_HEIGHT
 #define TEST_FRAMES 100
 #define TARGET_FPS 60
 #define FIXED_UPDATE 1 // boolean
@@ -46,7 +46,7 @@ int main(void) {
 		return 1;
 	}
 
-	srand(0);
+	srand(time(0));
 	Vec2 points[ENTITY_COUNT];
 	Rect rects[ENTITY_COUNT];
 	Circle circles[ENTITY_COUNT];
@@ -57,8 +57,8 @@ int main(void) {
 #if RANDOM
 	for (i = 0; i < ENTITY_COUNT; ++i) {
 		points[i] = (Vec2){
-			.x = (float)rand() / RAND_MAX * QT_WIDTH,
-			.y = (float)rand() / RAND_MAX * QT_HEIGHT
+			.x = (float)rand() / RAND_MAX * QT_WIDTH / 2 + (float)QT_WIDTH / 4,
+			.y = (float)rand() / RAND_MAX * QT_HEIGHT / 2 + (float)QT_HEIGHT / 4
 		};
 		rects[i] = (Rect){
 			.min = {.x = points[i].x - ENTITY_RADIUS, .y = points[i].y - ENTITY_RADIUS},
