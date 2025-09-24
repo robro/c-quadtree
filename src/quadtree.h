@@ -11,13 +11,15 @@ void quadtree_clear(QuadTree *qtree);
 
 void quadtree_free(QuadTree *qtree);
 
+uint quadtree_get_size(QuadTree *qtree);
+
 void quadtree_add_points(QuadTree *qtree, Vec2 *points, int point_count);
 
 void quadtree_add_rects(QuadTree *qtree, Rect *rects, int rect_count);
 
 void quadtree_add_circles(QuadTree *qtree, Circle *circles, int circle_count);
 
-void quadtree_add_entities_circle(QuadTree *qtree, EntityCircle *entities_circle, int count);
+uint quadtree_add_entities_circle(QuadTree *qtree, EntityCircle *entities_circle, int count);
 
 void quadtree_points_intersecting_rect(const QuadTree *qtree, const Rect *rect, DynamicArray *results);
 

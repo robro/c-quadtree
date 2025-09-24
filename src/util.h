@@ -13,6 +13,8 @@ typedef struct {
 	float y;
 } Vec2;
 
+#define VEC2_ZERO (Vec2){0, 0}
+
 typedef struct {
 	Vec2 min;
 	Vec2 max;

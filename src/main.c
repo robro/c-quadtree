@@ -7,25 +7,34 @@
 #include "quadtree.h"
 #include "util.h"
 
+#define RANDOM 1
+
 #define TEST_RECTS 0
 #define TEST_CIRCLES 1
 
+#define TEST_TYPE TEST_CIRCLES
+
+#define WINDOW_TITLE "Quadtree"
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
-#define WINDOW_TITLE "Quadtree"
 #define FONT_SIZE 32
 
+#if RANDOM
 // Physics
-#define ENTITY_COUNT 2500
-#define ENTITY_RADIUS 5
-#define VELOCITY_RANGE 200
+#define ENTITY_COUNT 5000
+#define ENTITY_RADIUS 2.5
+#define VELOCITY_RANGE 100
+#else
+#define ENTITY_COUNT 3
+#endif
 
 #define QT_WIDTH 800
 #define QT_HEIGHT 800
 #define TEST_FRAMES 100
 #define TARGET_FPS 60
+#define FIXED_UPDATE 1 // boolean
 
-#define FIXED_DELTA_TIME (1.0 / TARGET_FPS)
+#define TARGET_DELTA (1.0 / TARGET_FPS)
 
 int main(void) {
 	QuadTree *qtree = quadtree_new(&(Rect){
@@ -45,6 +54,7 @@ int main(void) {
 	EntityCircle entities_circle_future[ENTITY_COUNT];
 	int i, j, k;
 
+#if RANDOM
 	for (i = 0; i < ENTITY_COUNT; ++i) {
 		points[i] = (Vec2){
 			.x = (float)rand() / RAND_MAX * QT_WIDTH,
@@ -66,66 +76,112 @@ int main(void) {
 			.shape = circles[i]
 		};
 	}
+#else
+	entities_circle[0] = (EntityCircle){
+		.velocity = {
+			.x = 200,
+			.y = 0,
+		},
+		.shape = (Circle){
+			.position = {
+				.x = 200,
+				.y = (float)QT_HEIGHT / 2,
+			},
+			.radius = 100,
+		}
+	};
+	entities_circle[1] = (EntityCircle){
+		.velocity = {
+			.x = 0,
+			.y = 0,
+		},
+		.shape = (Circle){
+			.position = {
+				.x = 600,
+				.y = (float)QT_HEIGHT / 2 - 100,
+			},
+			.radius = 100,
+		}
+	};
+	entities_circle[2] = (EntityCircle){
+		.velocity = {
+			.x = 0,
+			.y = 0,
+		},
+		.shape = (Circle){
+			.position = {
+				.x = 600,
+				.y = (float)QT_HEIGHT / 2 + 100,
+			},
+			.radius = 100,
+		}
+	};
+#endif
 	printf("entity count: %d\n", ENTITY_COUNT);
 	memcpy(entities_circle_future, entities_circle, sizeof(EntityCircle) * ENTITY_COUNT);
 
 	timespec start_time;
 	timespec end_time;
 	timespec work_time;
-	DynamicArray collisions;
-	dynamic_array_init(&collisions);
+	DynamicArray intersecting_entities;
+	dynamic_array_init(&intersecting_entities);
 	uint total_collisions;
 
-	EntityCircle *colliding_circle;
-	Vec2 collision_normal;
-	Vec2 collision_normal_sum;
-	float dot_product;
-	Vec2 new_velocity;
-
-	float delta_time;
+	char entity_count_str[32];
 	char fps_str[32];
 	char frame_time_str[32];
 
+	float delta_time = TARGET_DELTA;
+
 	SetConfigFlags(FLAG_MSAA_4X_HINT);
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
-	// SetTargetFPS(TARGET_FPS);
-
-	while (!WindowShouldClose()) {
-#if TEST_RECTS
-		quadtree_add_rects(qtree, rects, ENTITY_COUNT);
-		for (j = 0; j < ENTITY_COUNT; ++j) {
-			dynamic_array_clear(&collisions);
-			quadtree_rects_intersecting_rect(qtree, &rects[j], &collisions);
-			total_collisions += collisions.size;
-		}
-		quadtree_clear(qtree);
+#if FIXED_UPDATE
+	SetTargetFPS(TARGET_FPS);
 #endif
 
-#if TEST_CIRCLES
-		delta_time = GetFrameTime();
+	while (!WindowShouldClose()) {
 		quadtree_clear(qtree);
-		quadtree_add_entities_circle(qtree, entities_circle, ENTITY_COUNT);
+#if TEST_TYPE == TEST_RECTS
+		quadtree_add_rects(qtree, rects, ENTITY_COUNT);
 		for (j = 0; j < ENTITY_COUNT; ++j) {
-			dynamic_array_clear(&collisions);
-			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &collisions);
-			if (collisions.size > 0) {
-				collision_normal_sum = (Vec2){0, 0};
-				for (k = 0; k < collisions.size; ++k) {
-					colliding_circle = collisions.array[k];
-					collision_normal = vec2_direction(&colliding_circle->shape.position, &entities_circle[j].shape.position);
-					collision_normal_sum = vec2_add(&collision_normal_sum, &collision_normal);
+			dynamic_array_clear(&intersecting_entities);
+			quadtree_rects_intersecting_rect(qtree, &rects[j], &intersecting_entities);
+			total_collisions += intersecting_entities.size;
+		}
+#elif TEST_TYPE == TEST_CIRCLES
+		uint entities_in_qtree = quadtree_add_entities_circle(qtree, entities_circle, ENTITY_COUNT);
+		for (j = 0; j < ENTITY_COUNT; ++j) {
+			dynamic_array_clear(&intersecting_entities);
+			quadtree_entities_circle_intersecting_entity_circle(qtree, &entities_circle[j], &intersecting_entities);
+			if (intersecting_entities.size > 0) {
+				Vec2 relative_velocity;
+				Vec2 collision_position_sum = VEC2_ZERO;
+				Vec2 relative_velocity_sum = VEC2_ZERO;
+				for (k = 0; k < intersecting_entities.size; ++k) {
+					EntityCircle *intersecting_circle = intersecting_entities.array[k];
+					collision_position_sum = vec2_add(&collision_position_sum, &intersecting_circle->shape.position);
+					relative_velocity = vec2_subtract(&intersecting_circle->velocity, &entities_circle[j].velocity);
+					relative_velocity_sum = vec2_add(&relative_velocity_sum, &relative_velocity);
 				}
-				collision_normal = vec2_normalized(&collision_normal_sum);
-				dot_product = vec2_dot_product(&entities_circle[j].velocity, &collision_normal);
-				if (dot_product < 0) {
-					new_velocity = vec2_multiply(&collision_normal, 2 * dot_product);
-					new_velocity = vec2_subtract(&entities_circle[j].velocity, &new_velocity);
-					entities_circle_future[j].velocity = new_velocity;
+				relative_velocity = vec2_divide(&relative_velocity_sum, intersecting_entities.size);
+				Vec2 collision_position = vec2_divide(&collision_position_sum, intersecting_entities.size);
+				Vec2 position_difference = vec2_subtract(&collision_position, &entities_circle[j].shape.position);
+				if (vec2_dot_product(&position_difference, &relative_velocity) < 0) {
+					Vec2 tangent_vector = {
+						.x = -position_difference.y,
+						.y =  position_difference.x
+					};
+					tangent_vector = vec2_normalized(&tangent_vector);
+					float length = vec2_dot_product(&relative_velocity, &tangent_vector);
+					Vec2 velocity_on_tangent = vec2_multiply(&tangent_vector, length);
+					Vec2 velocity_perpendicular_to_tangent = vec2_subtract(&relative_velocity, &velocity_on_tangent);
+					entities_circle_future[j].velocity.x += velocity_perpendicular_to_tangent.x;
+					entities_circle_future[j].velocity.y += velocity_perpendicular_to_tangent.y;
 				}
 			}
-			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x * FIXED_DELTA_TIME;
-			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y * FIXED_DELTA_TIME;
-			total_collisions += collisions.size;
+			entities_circle_future[j].shape.position.x += entities_circle_future[j].velocity.x * delta_time;
+			entities_circle_future[j].shape.position.y += entities_circle_future[j].velocity.y * delta_time;
+			total_collisions += intersecting_entities.size;
 		}
 
 		memcpy(entities_circle, entities_circle_future, sizeof(EntityCircle) * ENTITY_COUNT);
@@ -136,16 +192,18 @@ int main(void) {
 		for (i = 0; i < ENTITY_COUNT; ++i) {
 			DrawCircle(entities_circle[i].shape.position.x, entities_circle[i].shape.position.y, entities_circle[i].shape.radius, BLUE);
 		}
+		sprintf(entity_count_str, "entities: %d", entities_in_qtree);
 		sprintf(fps_str, "fps: %d", GetFPS());
-		sprintf(frame_time_str, "frame time: %f", delta_time);
-		DrawText(fps_str, 0, 0, FONT_SIZE, WHITE);
-		DrawText(frame_time_str, 0, FONT_SIZE, FONT_SIZE, WHITE);
+		sprintf(frame_time_str, "frame time: %f", GetFrameTime());
+		DrawText(entity_count_str, 0, 0, FONT_SIZE, WHITE);
+		DrawText(fps_str, 0, FONT_SIZE, FONT_SIZE, WHITE);
+		DrawText(frame_time_str, 0, FONT_SIZE * 2, FONT_SIZE, WHITE);
 		EndDrawing();
 #endif
 	}
 
 	CloseWindow();
-	free(collisions.array);
+	free(intersecting_entities.array);
 	quadtree_free(qtree);
 	return 0;
 }

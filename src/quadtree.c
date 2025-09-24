@@ -55,6 +55,10 @@ void quadtree_free(QuadTree *qtree) {
 	free(qtree);
 }
 
+uint quadtree_get_size(QuadTree *qtree) {
+	return qtree->size;
+}
+
 typedef bool IntersectsFunc(const void *, const void *);
 
 bool _rect_intersects_point(const void *rect, const void *point) {
@@ -161,10 +165,12 @@ void quadtree_add_circles(QuadTree *qtree, Circle *circles, int count) {
 	}
 }
 
-void quadtree_add_entities_circle(QuadTree *qtree, EntityCircle *entities_circle, int count) {
+uint quadtree_add_entities_circle(QuadTree *qtree, EntityCircle *entities_circle, int count) {
+	uint entities_added = 0;
 	for (int i = 0; i < count; ++i) {
-		quadtree_node_add_entity(qtree, 0, &entities_circle[i], _rect_intersects_entity_circle);
+		entities_added += quadtree_node_add_entity(qtree, 0, &entities_circle[i], _rect_intersects_entity_circle);
 	}
+	return entities_added;
 }
 
 void quadtree_node_entities_intersecting_entity(const QuadTree *qtree, int index, const void *entity, void *results, IntersectsFunc intersects_node, IntersectsFunc intersects_entity) {
