@@ -8,29 +8,34 @@
 typedef struct timespec timespec;
 typedef unsigned int uint;
 
-typedef struct {
+typedef struct Vec2 {
 	float x;
 	float y;
 } Vec2;
 
 #define VEC2_ZERO (Vec2){0, 0}
 
-typedef struct {
+typedef struct Rect {
 	Vec2 min;
 	Vec2 max;
 } Rect;
 
-typedef struct {
+typedef struct Circle {
 	float radius;
 	Vec2 position;
 } Circle;
 
-typedef struct {
+typedef struct EntityRect {
+	Vec2 velocity;
+	Rect shape;
+} EntityRect;
+
+typedef struct EntityCircle {
 	Vec2 velocity;
 	Circle shape;
 } EntityCircle;
 
-typedef struct {
+typedef struct DynamicArray {
 	uint size;
 	uint capacity;
 	void **array;
@@ -60,11 +65,15 @@ bool rect_intersects_rect(const Rect *a, const Rect *b);
 
 bool rect_intersects_circle(const Rect *rect, const Circle *circle);
 
-bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *circle);
+bool rect_intersects_entity_rect(const Rect *rect, const EntityRect *entity_rect);
+
+bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *entity_circle);
 
 bool circle_intersects_circle(const Circle *a, const Circle *b);
 
 bool entity_circle_intersects_entity_circle(const EntityCircle *a, const EntityCircle *b);
+
+bool entity_rect_intersects_entity_rect(const EntityRect *a, const EntityRect *b);
 
 bool dynamic_array_init(void *array);
 

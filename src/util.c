@@ -149,10 +149,18 @@ bool circle_intersects_circle(const Circle *a, const Circle *b) {
 	return vec2_magnitude(&difference) < a->radius + b->radius;
 }
 
-bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *circle) {
-	return rect_intersects_circle(rect, &circle->shape);
+bool rect_intersects_entity_rect(const Rect *rect, const EntityRect *entity_rect) {
+	return rect_intersects_rect(rect, &entity_rect->shape);
+}
+
+bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *entity_circle) {
+	return rect_intersects_circle(rect, &entity_circle->shape);
 }
 
 bool entity_circle_intersects_entity_circle(const EntityCircle *a, const EntityCircle *b) {
 	return circle_intersects_circle(&a->shape, &b->shape);
+}
+
+bool entity_rect_intersects_entity_rect(const EntityRect *a, const EntityRect *b) {
+	return rect_intersects_rect(&a->shape, &b->shape);
 }
