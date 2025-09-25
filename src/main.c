@@ -21,7 +21,7 @@
 
 #if RANDOM
 // Physics
-#define ENTITY_COUNT 10000
+#define ENTITY_COUNT 5000
 #define ENTITY_RADIUS 3
 #define VELOCITY_RANGE 200
 #else
@@ -32,7 +32,7 @@
 #define QT_HEIGHT SCREEN_HEIGHT
 #define TEST_FRAMES 100
 #define TARGET_FPS 60
-#define FIXED_UPDATE 1 // boolean
+#define FIXED_UPDATE 0 // boolean
 
 #define TARGET_DELTA (1.0 / TARGET_FPS)
 
@@ -51,8 +51,10 @@ int main(void) {
 	Vec2 start_velocities[ENTITY_COUNT];
 	EntityCircle entities_circle[ENTITY_COUNT];
 	EntityCircle entities_circle_future[ENTITY_COUNT];
+	EntityCircle entities_circle_start[ENTITY_COUNT];
 	EntityRect entities_rect[ENTITY_COUNT];
 	EntityRect entities_rect_future[ENTITY_COUNT];
+	EntityRect entities_rect_start[ENTITY_COUNT];
 	int i, j, k;
 
 #if RANDOM
@@ -131,7 +133,9 @@ int main(void) {
 	};
 #endif
 	memcpy(entities_rect_future, entities_rect, sizeof(EntityRect) * ENTITY_COUNT);
+	memcpy(entities_rect_start, entities_rect, sizeof(EntityRect) * ENTITY_COUNT);
 	memcpy(entities_circle_future, entities_circle, sizeof(EntityCircle) * ENTITY_COUNT);
+	memcpy(entities_circle_start, entities_circle, sizeof(EntityCircle) * ENTITY_COUNT);
 
 	printf("entity count: %d\n", ENTITY_COUNT);
 
@@ -158,6 +162,10 @@ int main(void) {
 		uint entities_in_qtree;
 		quadtree_clear(qtree);
 #if TEST_TYPE == TEST_RECTS
+		if (IsKeyPressed(KEY_SPACE)) {
+			memcpy(entities_rect, entities_rect_start, sizeof(EntityRect) * ENTITY_COUNT);
+			memcpy(entities_rect_future, entities_rect_start, sizeof(EntityRect) * ENTITY_COUNT);
+		}
 		entities_in_qtree = quadtree_add_entities_rect(qtree, entities_rect, ENTITY_COUNT);
 		for (i = 0; i < ENTITY_COUNT; ++i) {
 			dynamic_array_clear(&intersecting_entities);
