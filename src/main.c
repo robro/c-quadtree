@@ -21,8 +21,8 @@
 
 #if RANDOM
 // Physics
-#define ENTITY_COUNT 5000
-#define ENTITY_RADIUS 4
+#define ENTITY_COUNT 10000
+#define ENTITY_RADIUS 3
 #define VELOCITY_RANGE 200
 #else
 #define ENTITY_COUNT 3
@@ -32,7 +32,7 @@
 #define QT_HEIGHT SCREEN_HEIGHT
 #define TEST_FRAMES 100
 #define TARGET_FPS 60
-#define FIXED_UPDATE 0 // boolean
+#define FIXED_UPDATE 1 // boolean
 
 #define TARGET_DELTA (1.0 / TARGET_FPS)
 
@@ -47,9 +47,8 @@ int main(void) {
 	}
 
 	srand(time(0));
-	Vec2 points[ENTITY_COUNT];
-	Rect rects[ENTITY_COUNT];
-	Circle circles[ENTITY_COUNT];
+	Vec2 start_positions[ENTITY_COUNT];
+	Vec2 start_velocities[ENTITY_COUNT];
 	EntityCircle entities_circle[ENTITY_COUNT];
 	EntityCircle entities_circle_future[ENTITY_COUNT];
 	EntityRect entities_rect[ENTITY_COUNT];
@@ -58,28 +57,36 @@ int main(void) {
 
 #if RANDOM
 	for (i = 0; i < ENTITY_COUNT; ++i) {
-		points[i] = (Vec2){
+		start_positions[i] = (Vec2){
 			.x = (float)rand() / RAND_MAX * QT_WIDTH / 2 + (float)QT_WIDTH / 4,
-			.y = (float)rand() / RAND_MAX * QT_HEIGHT / 2 + (float)QT_HEIGHT / 4
+			.y = (float)rand() / RAND_MAX * QT_HEIGHT / 2 + (float)QT_HEIGHT / 4,
 		};
-		rects[i] = (Rect){
-			.min = {.x = points[i].x - ENTITY_RADIUS, .y = points[i].y - ENTITY_RADIUS},
-			.max = {.x = points[i].x + ENTITY_RADIUS, .y = points[i].y + ENTITY_RADIUS}
-		};
-		circles[i] = (Circle){
-			.position = {.x = points[i].x, .y = points[i].y},
-			.radius = ENTITY_RADIUS
-		};
+		start_velocities[i] = (Vec2){
+			.x = ((float)rand() / RAND_MAX - 0.5) * VELOCITY_RANGE,
+			.y = ((float)rand() / RAND_MAX - 0.5) * VELOCITY_RANGE,
+		},
 		entities_circle[i] = (EntityCircle){
-			.velocity = {
-				.x = ((float)rand() / RAND_MAX - 0.5) * VELOCITY_RANGE,
-				.y = ((float)rand() / RAND_MAX - 0.5) * VELOCITY_RANGE
-			},
-			.shape = circles[i]
+			.velocity = start_velocities[i],
+			.shape = {
+				.position = {
+					.x = start_positions[i].x,
+					.y = start_positions[i].y,
+				},
+				.radius = ENTITY_RADIUS
+			}
 		};
 		entities_rect[i] = (EntityRect){
-			.velocity = entities_circle[i].velocity,
-			.shape = rects[i]
+			.velocity = start_velocities[i],
+			.shape = {
+				.min = {
+					.x = start_positions[i].x - ENTITY_RADIUS,
+					.y = start_positions[i].y - ENTITY_RADIUS,
+				},
+				.max = {
+					.x = start_positions[i].x + ENTITY_RADIUS, 
+					.y = start_positions[i].y + ENTITY_RADIUS,
+				}
+			}
 		};
 	}
 #else
@@ -255,7 +262,12 @@ int main(void) {
 		BeginDrawing();
 		ClearBackground(BLACK);
 		for (i = 0; i < ENTITY_COUNT; ++i) {
-			DrawCircle(entities_circle[i].shape.position.x, entities_circle[i].shape.position.y, entities_circle[i].shape.radius, BLUE);
+			DrawCircle(
+				entities_circle[i].shape.position.x,
+				entities_circle[i].shape.position.y,
+				entities_circle[i].shape.radius,
+				BLUE
+			);
 		}
 		sprintf(entity_count_str, "entities: %d", entities_in_qtree);
 		sprintf(fps_str, "fps: %d", GetFPS());
