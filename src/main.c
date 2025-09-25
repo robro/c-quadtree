@@ -56,9 +56,6 @@ int main(void) {
 	EntityRect entities_rect_future[ENTITY_COUNT];
 	int i, j, k;
 
-	memcpy(entities_rect_future, entities_rect, sizeof(EntityRect) * ENTITY_COUNT);
-	memcpy(entities_circle_future, entities_circle, sizeof(EntityCircle) * ENTITY_COUNT);
-
 #if RANDOM
 	for (i = 0; i < ENTITY_COUNT; ++i) {
 		points[i] = (Vec2){
@@ -126,6 +123,9 @@ int main(void) {
 		}
 	};
 #endif
+	memcpy(entities_rect_future, entities_rect, sizeof(EntityRect) * ENTITY_COUNT);
+	memcpy(entities_circle_future, entities_circle, sizeof(EntityCircle) * ENTITY_COUNT);
+
 	printf("entity count: %d\n", ENTITY_COUNT);
 
 	timespec start_time;
