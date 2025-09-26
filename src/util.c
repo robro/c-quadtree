@@ -74,93 +74,87 @@ Vec2 vec2_direction(const Vec2 *from, const Vec2 *to) {
 	return vec2_normalized(&difference);
 }
 
-Vec2 rect_get_center(const Rect *rect) {
+Vec2 aabb_get_center(const AABB *aabb) {
 	return (Vec2){
-		.x = rect->min.x + (rect->max.x - rect->min.x) / 2,
-		.y = rect->min.y + (rect->max.y - rect->min.y) / 2,
+		.x = aabb->min.x + (aabb->max.x - aabb->min.x) / 2,
+		.y = aabb->min.y + (aabb->max.y - aabb->min.y) / 2,
 	};
 }
 
-bool dynamic_array_init(void *array) {
+AABB aabb_get_from_entity_rect(const EntityRect *rect) {
+	return (AABB){
+		.min = {
+			.x = rect->base.position.x - rect->shape.width / 2,
+			.y = rect->base.position.y - rect->shape.height / 2,
+		},
+		.max = {
+			.x = rect->base.position.x + rect->shape.width / 2,
+			.y = rect->base.position.y + rect->shape.height / 2,
+		},
+	};
+}
+
+bool dynamic_array_init(DynamicArray *array) {
 	void **new_array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
 	if (new_array == NULL) {
 		return false;
 	}
-	DynamicArray *dynamic_array = array;
-	dynamic_array->size = 0;
-	dynamic_array->capacity = ARRAY_DEFAULT_CAPACITY;
-	dynamic_array->array = new_array;
+	array->size = 0;
+	array->capacity = ARRAY_DEFAULT_CAPACITY;
+	array->array = new_array;
 	return true;
 }
 
-bool dynamic_array_push_back(void *array, void *value) {
-	DynamicArray *dynamic_array = array;
-	if (dynamic_array->size == dynamic_array->capacity) {
-		void **new_array = realloc(dynamic_array->array, sizeof(void *) * dynamic_array->capacity * 2);
+bool dynamic_array_push_back(DynamicArray *array, void *value) {
+	if (array->size == array->capacity) {
+		void **new_array = realloc(array->array, sizeof(void *) * array->capacity * 2);
 		if (new_array == NULL) {
 			return false;
 		}
-		dynamic_array->array = new_array;
-		dynamic_array->capacity *= 2;
+		array->array = new_array;
+		array->capacity *= 2;
 	}
-	dynamic_array->array[dynamic_array->size++] = value;
+	array->array[array->size++] = value;
 	return true;
 }
 
-void dynamic_array_clear(void *array) {
-	DynamicArray *dynamic_array = array;
-	dynamic_array->size = 0;
+void dynamic_array_clear(DynamicArray *array) {
+	array->size = 0;
 }
 
-bool rect_intersects_circle(const Rect *rect, const Circle *circle) {
-	Vec2 rect_center = rect_get_center(rect);
-	Vec2 difference = vec2_subtract(&circle->position, &rect_center);
+bool aabb_intersects_entity_circle(const AABB *aabb, const EntityCircle *circle) {
+	Vec2 aabb_center = aabb_get_center(aabb);
+	Vec2 difference = vec2_subtract(&circle->base.position, &aabb_center);
 	Vec2 clamped = {
 		.x = clamp_float(difference.x,
-			-((rect->max.x - rect->min.x) / 2),
-			 ((rect->max.x - rect->min.x) / 2)),
+			-((aabb->max.x - aabb->min.x) / 2),
+			 ((aabb->max.x - aabb->min.x) / 2)),
 		.y = clamp_float(difference.y,
-			-((rect->max.y - rect->min.y) / 2),
-			 ((rect->max.y - rect->min.y) / 2))
+			-((aabb->max.y - aabb->min.y) / 2),
+			 ((aabb->max.y - aabb->min.y) / 2))
 	};
-	Vec2 closest = vec2_add(&rect_center, &clamped);
-	difference = vec2_subtract(&closest, &circle->position);
-	return vec2_magnitude(&difference) < circle->radius;
+	Vec2 closest = vec2_add(&aabb_center, &clamped);
+	difference = vec2_subtract(&closest, &circle->base.position);
+	return vec2_magnitude(&difference) < circle->shape.radius;
 }
 
-bool rect_intersects_rect(const Rect *a, const Rect *b) {
-	if (a->max.x < b->min.x || a->min.x >= b->max.x ||
-		a->max.y < b->min.y || a->min.y >= b->max.y) {
-		return false;
-	};
-	return true;
+bool aabb_intersects_aabb(const AABB *a, const AABB *b) {
+	return (a->max.x > b->min.x && a->min.x < b->max.x &&
+			a->max.y > b->min.y && a->min.y < b->max.y);
 }
 
-bool rect_intersects_point(const Rect *rect, const Vec2 *point) {
-	if (point->x < rect->min.x || point->x >= rect->max.x ||
-		point->y < rect->min.y || point->y >= rect->max.y) {
-		return false;
-	}
-	return true;
-}
-
-bool circle_intersects_circle(const Circle *a, const Circle *b) {
-	Vec2 difference = vec2_subtract(&a->position, &b->position);
-	return vec2_magnitude(&difference) < a->radius + b->radius;
-}
-
-bool rect_intersects_entity_rect(const Rect *rect, const EntityRect *entity_rect) {
-	return rect_intersects_rect(rect, &entity_rect->shape);
-}
-
-bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *entity_circle) {
-	return rect_intersects_circle(rect, &entity_circle->shape);
+bool aabb_intersects_entity_rect(const AABB *aabb, const EntityRect *entity_rect) {
+	AABB aabb_b = aabb_get_from_entity_rect(entity_rect);
+	return aabb_intersects_aabb(aabb, &aabb_b);
 }
 
 bool entity_circle_intersects_entity_circle(const EntityCircle *a, const EntityCircle *b) {
-	return circle_intersects_circle(&a->shape, &b->shape);
+	Vec2 difference = vec2_subtract(&a->base.position, &b->base.position);
+	return vec2_magnitude(&difference) < a->shape.radius + b->shape.radius;
 }
 
 bool entity_rect_intersects_entity_rect(const EntityRect *a, const EntityRect *b) {
-	return rect_intersects_rect(&a->shape, &b->shape);
+	AABB aabb_a = aabb_get_from_entity_rect(a);
+	AABB aabb_b = aabb_get_from_entity_rect(b);
+	return aabb_intersects_aabb(&aabb_a, &aabb_b);
 }

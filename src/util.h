@@ -15,23 +15,32 @@ typedef struct Vec2 {
 
 #define VEC2_ZERO (Vec2){0, 0}
 
-typedef struct Rect {
+typedef struct AABB {
 	Vec2 min;
 	Vec2 max;
+} AABB;
+
+typedef struct Rect {
+	float width;
+	float height;
 } Rect;
 
 typedef struct Circle {
 	float radius;
-	Vec2 position;
 } Circle;
 
-typedef struct EntityRect {
+typedef struct Entity {
+	Vec2 position;
 	Vec2 velocity;
+} Entity;
+
+typedef struct EntityRect {
+	Entity base;
 	Rect shape;
 } EntityRect;
 
 typedef struct EntityCircle {
-	Vec2 velocity;
+	Entity base;
 	Circle shape;
 } EntityCircle;
 
@@ -57,29 +66,21 @@ float vec2_dot_product(const Vec2 *a, const Vec2 *b);
 
 float vec2_magnitude(const Vec2 *vec);
 
-Vec2 rect_get_center(const Rect *rect);
+Vec2 aabb_get_center(const AABB *rect);
 
-bool rect_intersects_point(const Rect *rect, const Vec2 *point);
+bool aabb_intersects_entity_rect(const AABB *aabb, const EntityRect *entity_rect);
 
-bool rect_intersects_rect(const Rect *a, const Rect *b);
-
-bool rect_intersects_circle(const Rect *rect, const Circle *circle);
-
-bool rect_intersects_entity_rect(const Rect *rect, const EntityRect *entity_rect);
-
-bool rect_intersects_entity_circle(const Rect *rect, const EntityCircle *entity_circle);
-
-bool circle_intersects_circle(const Circle *a, const Circle *b);
+bool aabb_intersects_entity_circle(const AABB *aabb, const EntityCircle *entity_circle);
 
 bool entity_circle_intersects_entity_circle(const EntityCircle *a, const EntityCircle *b);
 
 bool entity_rect_intersects_entity_rect(const EntityRect *a, const EntityRect *b);
 
-bool dynamic_array_init(void *array);
+bool dynamic_array_init(DynamicArray *array);
 
-bool dynamic_array_push_back(void *array, void *value);
+bool dynamic_array_push_back(DynamicArray *array, void *value);
 
-void dynamic_array_clear(void *array);
+void dynamic_array_clear(DynamicArray *array);
 
 timespec timespec_subtract(const timespec *a, const timespec *b);
 
