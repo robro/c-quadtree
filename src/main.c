@@ -24,7 +24,7 @@
 // Physics
 #define ENTITY_COUNT 4000
 #define ENTITY_RADIUS 4
-#define VELOCITY_RANGE 200
+#define VELOCITY_RANGE 500
 #else
 #define ENTITY_COUNT 3
 #endif
@@ -33,7 +33,7 @@
 #define QT_HEIGHT SCREEN_HEIGHT
 #define TEST_FRAMES 100
 #define TARGET_FPS 60
-#define FIXED_UPDATE 0 // boolean
+#define FIXED_UPDATE 1 // boolean
 #define THREAD_COUNT 8
 
 #define TARGET_DELTA (1.0 / TARGET_FPS)
@@ -280,11 +280,15 @@ int main(void) {
 		BeginDrawing();
 		ClearBackground(BLACK);
 		for (i = 0; i < ENTITY_COUNT; ++i) {
+			float speed_mult = vec2_magnitude(&entities_circle[i].velocity) / VELOCITY_RANGE * 2;
+			speed_mult = (speed_mult > 1) ? 1 : speed_mult;
+			unsigned char speed_channel = speed_mult * 255;
+			Color color = {speed_channel, 100, 255, speed_channel};
 			DrawCircle(
 				entities_circle[i].position.x,
 				entities_circle[i].position.y,
 				entities_circle[i].shape.circle.radius,
-				BLUE
+				color
 			);
 		}
 		sprintf(entity_count_str, "entities: %d", entities_in_qtree);
