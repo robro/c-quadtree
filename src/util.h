@@ -32,17 +32,11 @@ typedef struct Circle {
 typedef struct Entity {
 	Vec2 position;
 	Vec2 velocity;
+	union {
+		Rect rect;
+		Circle circle;
+	} shape;
 } Entity;
-
-typedef struct EntityRect {
-	Entity base;
-	Rect shape;
-} EntityRect;
-
-typedef struct EntityCircle {
-	Entity base;
-	Circle shape;
-} EntityCircle;
 
 typedef struct DynamicArray {
 	uint size;
@@ -70,13 +64,13 @@ float vec2_magnitude_squared(const Vec2 *vec);
 
 Vec2 aabb_get_center(const AABB *rect);
 
-bool aabb_intersects_entity_rect(const AABB *aabb, const EntityRect *entity_rect);
+bool aabb_intersects_entity_rect(const AABB *aabb, const Entity *rect);
 
-bool aabb_intersects_entity_circle(const AABB *aabb, const EntityCircle *entity_circle);
+bool aabb_intersects_entity_circle(const AABB *aabb, const Entity *rect);
 
-bool entity_circle_intersects_entity_circle(const EntityCircle *a, const EntityCircle *b);
+bool entity_circle_intersects_entity_circle(const Entity *a, const Entity *b);
 
-bool entity_rect_intersects_entity_rect(const EntityRect *a, const EntityRect *b);
+bool entity_rect_intersects_entity_rect(const Entity *a, const Entity *b);
 
 bool dynamic_array_init(DynamicArray *array);
 
