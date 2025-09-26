@@ -61,6 +61,10 @@ float vec2_magnitude(const Vec2 *vec) {
 	return sqrt(vec->x * vec->x + vec->y * vec->y);
 }
 
+float vec2_magnitude_squared(const Vec2 *vec) {
+	return vec->x * vec->x + vec->y * vec->y;
+}
+
 Vec2 vec2_normalized(const Vec2 *vec) {
 	return vec2_divide(vec, vec2_magnitude(vec));
 }
@@ -95,7 +99,7 @@ AABB aabb_get_from_entity_rect(const EntityRect *rect) {
 }
 
 bool dynamic_array_init(DynamicArray *array) {
-	void **new_array = malloc(sizeof(array) * ARRAY_DEFAULT_CAPACITY);
+	void **new_array = malloc(sizeof(*new_array) * ARRAY_DEFAULT_CAPACITY);
 	if (new_array == NULL) {
 		return false;
 	}
@@ -107,7 +111,7 @@ bool dynamic_array_init(DynamicArray *array) {
 
 bool dynamic_array_push_back(DynamicArray *array, void *value) {
 	if (array->size == array->capacity) {
-		void **new_array = realloc(array->array, sizeof(void *) * array->capacity * 2);
+		void **new_array = realloc(array->array, sizeof(*new_array) * array->capacity * 2);
 		if (new_array == NULL) {
 			return false;
 		}
@@ -120,6 +124,11 @@ bool dynamic_array_push_back(DynamicArray *array, void *value) {
 
 void dynamic_array_clear(DynamicArray *array) {
 	array->size = 0;
+}
+
+void dynamic_array_free(DynamicArray *array) {
+	free(array->array);
+	array->array = NULL;
 }
 
 bool aabb_intersects_entity_circle(const AABB *aabb, const EntityCircle *circle) {
@@ -135,7 +144,7 @@ bool aabb_intersects_entity_circle(const AABB *aabb, const EntityCircle *circle)
 	};
 	Vec2 closest = vec2_add(&aabb_center, &clamped);
 	difference = vec2_subtract(&closest, &circle->base.position);
-	return vec2_magnitude(&difference) < circle->shape.radius;
+	return vec2_magnitude_squared(&difference) < circle->shape.radius * circle->shape.radius;
 }
 
 bool aabb_intersects_aabb(const AABB *a, const AABB *b) {
@@ -150,7 +159,8 @@ bool aabb_intersects_entity_rect(const AABB *aabb, const EntityRect *entity_rect
 
 bool entity_circle_intersects_entity_circle(const EntityCircle *a, const EntityCircle *b) {
 	Vec2 difference = vec2_subtract(&a->base.position, &b->base.position);
-	return vec2_magnitude(&difference) < a->shape.radius + b->shape.radius;
+	float distance = a->shape.radius + b->shape.radius;
+	return vec2_magnitude_squared(&difference) < distance * distance;
 }
 
 bool entity_rect_intersects_entity_rect(const EntityRect *a, const EntityRect *b) {

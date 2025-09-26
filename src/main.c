@@ -13,7 +13,7 @@
 #define TEST_RECTS 0
 #define TEST_CIRCLES 1
 
-#define TEST_TYPE TEST_CIRCLES
+#define TEST_TYPE TEST_RECTS
 
 #define WINDOW_TITLE "Quadtree"
 #define SCREEN_WIDTH 1280
@@ -85,7 +85,7 @@ void *update_physics_rects(void *args) {
 		rects_future[i].base.position.y += rects_future[i].base.velocity.y * pua->delta_time;
 		dynamic_array_clear(&intersecting);
 	}
-	free(intersecting.array);
+	dynamic_array_free(&intersecting);
 	return NULL;
 }
 
@@ -128,7 +128,7 @@ void *update_physics_circles(void *args) {
 		circles_future[i].base.position.y += circles_future[i].base.velocity.y * pua->delta_time;
 		dynamic_array_clear(&intersecting);
 	}
-	free(intersecting.array);
+	dynamic_array_free(&intersecting);
 	return NULL;
 }
 
@@ -276,10 +276,10 @@ int main(void) {
 		ClearBackground(BLACK);
 		for (i = 0; i < ENTITY_COUNT; ++i) {
 			DrawCircle(
-				entities_rect[i].base.position.x, 
-				entities_rect[i].base.position.y, 
+				entities_rect[i].base.position.x,
+				entities_rect[i].base.position.y,
 				ENTITY_RADIUS,
-				GREEN
+				RED
 			);
 		}
 		sprintf(entity_count_str, "entities: %d", entities_in_qtree);

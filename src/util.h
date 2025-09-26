@@ -66,6 +66,8 @@ float vec2_dot_product(const Vec2 *a, const Vec2 *b);
 
 float vec2_magnitude(const Vec2 *vec);
 
+float vec2_magnitude_squared(const Vec2 *vec);
+
 Vec2 aabb_get_center(const AABB *rect);
 
 bool aabb_intersects_entity_rect(const AABB *aabb, const EntityRect *entity_rect);
@@ -81,6 +83,8 @@ bool dynamic_array_init(DynamicArray *array);
 bool dynamic_array_push_back(DynamicArray *array, void *value);
 
 void dynamic_array_clear(DynamicArray *array);
+
+void dynamic_array_free(DynamicArray *array);
 
 timespec timespec_subtract(const timespec *a, const timespec *b);
 
